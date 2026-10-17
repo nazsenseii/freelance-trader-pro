@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelance Trader Pro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        tv: { 900: '#0B0E14', 800: '#151924', 700: '#1e222d', 600: '#2A2E39', 500: '#434651' },
+                        accent: { 500: '#2962FF', 400: '#3B82F6' },
+                        mbuy: '#089981', msell: '#F23645', mwarn: '#FF9800'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+
+    <style>
+        body { transition: background-color 0.3s ease, color 0.3s ease; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A2E39; border-radius: 2px; }
+        .toggle-checkbox:checked { right: 0; border-color: #2962FF; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2962FF; }
+        .tab-active { border-bottom: 2px solid #2962FF; color: #2962FF; font-weight: 700; }
+        .tab-inactive { color: #64748b; font-weight: 600; border-bottom: 2px solid transparent; }
+        .tab-inactive:hover { color: #94a3b8; border-bottom: 2px solid #64748b; }
+        .modal-overlay { transition: opacity 0.2s ease; opacity: 0; pointer-events: none; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { transition: transform 0.2s ease, opacity 0.2s ease; transform: scale(0.97); opacity: 0; }
+        .modal-overlay.show .modal-content { transform: scale(1); opacity: 1; }
+        .panel-widget { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        th.sortable:hover { color: #2962FF; cursor: pointer; }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; }
+        .star-svg { pointer-events: none; } 
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-tv-900 dark:text-gray-300 font-sans text-sm min-h-screen flex flex-col">
+
+    <nav class="bg-white dark:bg-tv-800 border-b border-gray-300 dark:border-tv-700 flex justify-between items-center px-6 py-3 shrink-0 shadow-sm transition-colors duration-300 z-40">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-6 bg-accent-500 rounded-sm"></div>
+                <h1 class="text-xl font-black tracking-widest text-slate-800 dark:text-white uppercase">Freelance Trader <span class="text-accent-500">Pro</span></h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <span class="text-[11px] text-gray-500 font-mono tracking-widest uppercase" id="lastUpdatedHeader">SYNCING...</span>
+            <div class="flex items-center bg-gray-100 dark:bg-tv-900 p-1.5 rounded-sm border border-gray-200 dark:border-tv-700">
+                <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in mx-1">
+                    <input type="checkbox" name="toggle" id="themeToggle" onchange="tukarTema()" class="toggle-checkbox absolute block w-4 h-4 rounded-sm bg-white border-2 appearance-none cursor-pointer z-10 transition-all duration-300 right-0 border-slate-400 dark:border-accent-500"/>
+                    <label for="themeToggle" class="toggle-label block overflow-hidden h-4 rounded-sm bg-slate-400 dark:bg-accent-500 cursor-pointer transition-colors duration-300"></label>
+                </div>
+            </div>
+            <button onclick="muatTurunData()" class="bg-accent-500 hover:bg-accent-400 text-white text-[11px] uppercase font-bold tracking-wider px-5 py-2 rounded-sm transition shadow">SYNC DATA</button>
+        </div>
+    </nav>
+
+    <div class="p-4 flex-1 w-full max-w-[1900px] mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+            
+            <div class="lg:col-span-7 bg-white dark:bg-tv-800 rounded-sm border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 panel-widget flex flex-col h-[750px] transition-colors duration-300">
+                
+                <div class="flex space-x-6 px-4 pt-3 border-b border-gray-200 dark:border-tv-700 bg-gray-50 dark:bg-tv-800 overflow-x-auto text-[11px] uppercase tracking-wider shrink-0">
+                    <button onclick="bukaTab('tabSemua')" id="btnTab-tabSemua" class="tab-btn pb-3 tab-active whitespace-nowrap">MARKETS</button>
+                    <button onclick="bukaTab('tabGainers')" id="btnTab-tabGainers" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP GAINERS</button>
+                    <button onclick="bukaTab('tabActive')" id="btnTab-tabActive" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP ACTIVE</button>
+                    <button onclick="bukaTab('tabIndices')" id="btnTab-tabIndices" class="tab-btn pb-3 tab-inactive whitespace-nowrap">INDICES</button>
+                    <button onclick="bukaTab('tabWatchlist')" id="btnTab-tabWatchlist" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-mwarn flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg> WATCHLIST
+                    </button>
+                    <button onclick="bukaTab('tabScanner')" id="btnTab-tabScanner" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-accent-500">SCANNER</button>
+                </div>
+
+                <div id="panelScanner" class="hidden p-4 bg-gray-100 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 shrink-0">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end text-xs font-mono">
+                        <div>
+                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM PRICE (RM)</label>
+                            <input type="number" id="scanMinP" value="0.10" step="0.05" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MAXIMUM PRICE (RM)</label>
+                            <input type="number" id="scanMaxP" value="10.00" step="0.10" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM VOLUME</label>
+                            <input type="number" id="scanMinVol" value="2000" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">SIGNAL FILTER</label>
+                            <select id="scanSignal" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 font-sans font-semibold focus:border-accent-500">
+                                <option value="ALL">ALL SIGNALS</option>
+                                <option value="STRONG BUY">STRONG BUY</option>
+                                <option value="MONITOR CLOSELY">MONITOR CLOSELY</option>
+                                <option value="PULLBACK">PULLBACK</option>
+                                <option value="NEUTRAL">NEUTRAL</option>
+                                <option value="AVOID">AVOID</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button onclick="renderJadual()" class="w-full bg-accent-500 hover:bg-accent-400 text-white font-sans font-bold tracking-widest py-1.5 rounded-sm transition">SCAN</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-4 py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-100 dark:bg-tv-900/80 gap-4 shrink-0">
+                    <span class="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap" id="tajukJadual">MARKETS</span>
+                    
+                    <div class="flex-1 max-w-sm relative">
+                        <svg class="w-3.5 h-3.5 search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        <input type="text" id="carianKaunter" onkeyup="renderJadual()" placeholder="Search Ticker / Name..." class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm pl-8 pr-3 py-1 outline-none text-xs text-slate-800 dark:text-gray-200 focus:border-accent-500 font-mono transition shadow-sm">
+                    </div>
+
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 font-mono bg-gray-200 dark:bg-tv-700 px-2 py-0.5 rounded-sm whitespace-nowrap" id="kiraanKaunter">0 MATCHES</span>
+                </div>
+
+                <div id="panelTable" class="flex-1 overflow-y-auto bg-white dark:bg-tv-800">
+                    <table class="w-full text-left relative">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
+                            <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest select-none">
+                                <th class="px-3 py-2 w-10 text-center">★</th>
+                                <th class="px-3 py-2 sortable whitespace-nowrap" onclick="setSort('symbol')">TICKER ↕️</th>
+                                <th class="px-3 py-2">NAME</th>
+                                <th class="px-3 py-2">SECTOR</th>
+                                <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('price')">PRICE ↕️</th>
+                                <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('change')">CHANGE ↕️</th>
+                                <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('volume')">VOLUME ↕️</th>
+                                <th class="px-3 py-2 text-center sortable whitespace-nowrap" onclick="setSort('signal')">SIGNAL ↕️</th>
+                                <th class="px-3 py-2 text-center">FUNDAMENTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
+                            <tr><td colspan="9" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">CONNECTING TO SERVER...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="panelIndices" class="hidden flex-1 overflow-y-auto bg-white dark:bg-tv-800">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
+                            <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                                <th class="px-3 py-2">INDEX</th>
+                                <th class="px-3 py-2 text-right">VALUE</th>
+                                <th class="px-3 py-2 text-right">CHANGE</th>
+                                <th class="px-3 py-2 text-right">CHANGE (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="indicesBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
+                            <tr><td colspan="4" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">FETCHING...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: CHART -->
+            <div class="lg:col-span-5 bg-white dark:bg-tv-800 border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 rounded-sm panel-widget flex flex-col h-[750px] overflow-hidden">
+                
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 flex-wrap gap-2 shrink-0">
+                    <div class="flex items-start gap-4">
+                        <div class="flex flex-col">
+                            <h3 class="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-widest uppercase">TECHNICAL CHART</h3>
+                            <span id="chartSubtitle" class="text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[300px] block">WAITING DATA...</span>
+                        </div>
+                        
+                        <div class="flex bg-white dark:bg-tv-800 rounded-sm text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono mt-1">
+                            <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
+                            <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
+                            <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 font-mono mt-1">
+                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">FULL TV CHART</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-accent-500 select-none">
+                            <input type="checkbox" id="toggleEMA" onchange="toggleIndicators()" class="accent-accent-500 w-3 h-3"> EMA 50
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-gray-800 dark:hover:text-white select-none">
+                            <input type="checkbox" id="toggleTurtle" onchange="toggleIndicators()" class="accent-gray-800 w-3 h-3"> 20 DAY CHANNEL
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-mbuy select-none">
+                            <input type="checkbox" id="toggleIchi" onchange="toggleIndicators()" class="accent-mbuy w-3 h-3"> ICHIMOKU
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-blue-400 select-none border-l pl-3 border-gray-300 dark:border-tv-600">
+                            <input type="checkbox" id="toggleBB" onchange="toggleIndicators()" class="accent-blue-400 w-3 h-3"> BOLLINGER BANDS
+                        </label>
+                    </div>
+                </div>
+
+                <div id="chartError" class="text-center text-msell p-4 hidden text-xs uppercase tracking-widest font-mono"></div>
+                <div id="tvChartContainer" class="flex-1 w-full relative overflow-hidden"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL FA -->
+    <div id="faModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-tv-800 w-full max-w-lg rounded-sm shadow-2xl overflow-hidden border border-gray-300 dark:border-tv-600 modal-content">
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900">
+                <h3 class="font-bold text-sm uppercase tracking-widest text-slate-800 dark:text-white">
+                    FUNDAMENTAL : <span id="faSymbol" class="text-accent-500"></span>
+                </h3>
+                <button onclick="tutupFA()" class="text-gray-400 hover:text-msell text-xl font-mono leading-none cursor-pointer transition">✕</button>
+            </div>
+            <div class="p-6 text-sm font-mono">
+                <div class="flex justify-between items-center bg-gray-100 dark:bg-tv-900 px-4 py-3 border border-gray-200 dark:border-tv-700 mb-5 rounded-sm">
+                    <div>
+                        <span class="text-gray-500 dark:text-gray-400 block text-xs uppercase tracking-widest font-sans font-bold">SECTOR</span>
+                        <span id="faSector" class="font-bold text-slate-800 dark:text-white">-</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-gray-500 dark:text-gray-400 block text-xs uppercase tracking-widest font-sans font-bold">MARKET CAP</span>
+                        <span id="faCap" class="font-bold text-base text-accent-500">-</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">P/E RATIO</span><span id="faPE" class="font-bold">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">P/B RATIO</span><span id="faPB" class="font-bold">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">EPS (SEN)</span><span id="faEPS" class="font-bold">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">DIV YIELD</span><span id="faDiv" class="font-bold text-mbuy">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">ROE</span><span id="faROE" class="font-bold">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">NET INCOME</span><span id="faNetInc" class="font-bold text-mbuy">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">TOTAL DEBT</span><span id="faDebt" class="font-bold text-msell">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">SHARES OUT</span><span id="faShares" class="font-bold">-</span>
+                    </div>
+                    <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
+                        <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">FLOAT SHRS</span><span id="faFloat" class="font-bold">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SIGNAL -->
+    <div id="signalModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-tv-800 w-full max-w-md rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content">
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900">
+                <h3 class="font-bold text-sm uppercase tracking-widest text-slate-800 dark:text-white">SIGNAL LOGIC</h3>
+                <button onclick="tutupSignal()" class="text-gray-400 hover:text-msell text-xl font-mono leading-none cursor-pointer transition">✕</button>
+            </div>
+            <div class="p-6 text-sm text-gray-700 dark:text-gray-300 space-y-4 leading-relaxed font-sans" id="signalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://mflziwujrgumfuugvxpp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbHppd3Vqcmd1bWZ1dWd2eHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMzEzOTEsImV4cCI6MjEwNzcwNzM5MX0.vkCQ0HyKNDTwVm9UESYXZcQYjYS4ePJW1Vgoj0s3fQ4';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let globalData = []; let bankDataCarta = {}; 
+        let watchlist = []; 
+        
+        let currentTab = 'tabSemua'; let chartInstance = null; let candleSeries = null; let volumeSeries = null; 
+        let lineEMA50 = null; let lineSpanA = null; let lineSpanB = null; let lineHigh20 = null; let lineLow20 = null;
+        let lineBBUp = null; let lineBBDown = null; let lineMACD = null; let lineSignalMACD = null; let histMACD = null;
+        let lineVolAvg = null; 
+        
+        let currentSymbol = ''; let currentSortCol = 'signal'; let isAscending = false;
+        let chartResizeObserver = null; 
+
+        function tukarTema() {
+            const toggle = document.getElementById('themeToggle');
+            if (toggle.checked) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark');
+            if(chartInstance) {
+                chartInstance.applyOptions({
+                    layout: { backgroundColor: '#ffffff', textColor: '#475569', fontFamily: 'JetBrains Mono' },
+                    grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(0, 0, 0, 0.05)' } }
+                });
+            }
+        }
+
+        function setSort(col) {
+            if(currentSortCol === col) isAscending = !isAscending;
+            else { currentSortCol = col; isAscending = (col === 'symbol' || col === 'sector') ? true : false; }
+            renderJadual();
+        }
+
+        function bukaTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); });
+            document.getElementById(`btnTab-${tabName}`).classList.remove('tab-inactive'); document.getElementById(`btnTab-${tabName}`).classList.add('tab-active');
+
+            const pScan = document.getElementById('panelScanner'); const pTable = document.getElementById('panelTable'); const pInd = document.getElementById('panelIndices');
+            pScan.classList.add('hidden'); pTable.classList.remove('hidden'); pInd.classList.add('hidden');
+
+            if (tabName === 'tabScanner') { pScan.classList.remove('hidden'); pTable.classList.remove('hidden'); document.getElementById('tajukJadual').innerText = 'SCREENER RESULTS'; } 
+            else if (tabName === 'tabIndices') { pTable.classList.add('hidden'); pInd.classList.remove('hidden'); tarikSemuaIndeks(); } 
+            else if (tabName === 'tabWatchlist') { pTable.classList.remove('hidden'); document.getElementById('tajukJadual').innerText = 'MY WATCHLIST'; }
+            else { pTable.classList.remove('hidden'); const tNames = { tabSemua: 'MARKETS', tabGainers: 'TOP GAINERS', tabActive: 'TOP ACTIVE' }; document.getElementById('tajukJadual').innerText = tNames[tabName] || 'MARKETS'; }
+            
+            document.getElementById('carianKaunter').value = '';
+            if(tabName !== 'tabIndices') renderJadual();
+        }
+
+        async function toggleWatchlist(simbol) {
+            if (watchlist.includes(simbol)) {
+                watchlist = watchlist.filter(s => s !== simbol);
+                db.from('watchlist').delete().eq('symbol', simbol).then();
+            } else {
+                watchlist.push(simbol);
+                db.from('watchlist').insert([{ symbol: simbol }]).then();
+            }
+            renderJadual(); 
+        }
+
+        function formatNomborPendek(num) {
+            if (!num || isNaN(num)) return '-'; let val = parseFloat(num);
+            if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(2) + 'B'; if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(2) + 'M'; return val.toLocaleString();
+        }
+        function formatBillion(num) { return (!num || isNaN(num)) ? '-' : (parseFloat(num)/1e9).toFixed(2) + 'B'; }
+
+        async function tarikSemuaIndeks() {
+            const indBody = document.getElementById('indicesBody'); if(!indBody) return;
+            indBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">FETCHING...</td></tr>`;
+            const listIndeks = [ {sym: '^KLSE', name: 'KLCI'}, {sym: '^KLPT', name: 'PROPERTY'}, {sym: '^KLTCS', name: 'TECHNOLOGY'}, {sym: '^KLFIN', name: 'FINANCIAL'}, {sym: '^KLHC', name: 'HEALTHCARE'}, {sym: '^KLEAS', name: 'ENERGY'}, {sym: '^KLCS', name: 'CONSUMER'}, {sym: '^KLPRO', name: 'INDUSTRIAL'}, {sym: '^KLPL', name: 'PLANTATION'}, {sym: '^KLCN', name: 'CONSTRUCTION'} ];
+            try {
+                let htmlStr = '';
+                for(let item of listIndeks) {
+                    try {
+                        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${item.sym}?interval=1d&range=1d`)}`);
+                        if(res.ok) {
+                            const data = await res.json();
+                            if(data.chart && data.chart.result && data.chart.result.length > 0) {
+                                const k = data.chart.result[0].meta; const hrg = k.regularMarketPrice; const prev = k.previousClose;
+                                const chg = hrg - prev; const pct = (chg / prev) * 100; const warna = chg >= 0 ? 'text-mbuy' : 'text-msell'; const sign = chg >= 0 ? '+' : '';
+                                htmlStr += `<tr class="hover:bg-gray-100 dark:hover:bg-tv-800 transition-colors border-b border-gray-200 dark:border-tv-700">
+                                        <td class="px-3 py-2"><div class="font-bold text-sm text-slate-800 dark:text-white font-sans">${item.name}</div></td>
+                                        <td class="px-3 py-2 text-right font-bold text-sm text-gray-800 dark:text-gray-200">${hrg.toFixed(2)}</td>
+                                        <td class="px-3 py-2 text-right font-bold text-sm ${warna}">${sign}${chg.toFixed(2)}</td>
+                                        <td class="px-3 py-2 text-right font-bold text-sm ${warna}">${sign}${pct.toFixed(2)}%</td></tr>`;
+                            }
+                        }
+                    } catch(e) {}
+                }
+                if(htmlStr) indBody.innerHTML = htmlStr; else indBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-500 font-sans">UNAVAILABLE.</td></tr>`;
+            } catch(e) { indBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-msell font-sans">ERROR FETCHING.</td></tr>`; }
+        }
+
+        async function muatTurunData() {
+            try { tarikSemuaIndeks(); } catch(e){}
+            const tbody = document.getElementById('tableBody'); if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 font-bold uppercase tracking-widest font-sans animate-pulse">SYNCING DATA...</td></tr>`;
+            try {
+                const { data: wlData, error: wlError } = await db.from('watchlist').select('symbol');
+                if (wlData) watchlist = wlData.map(d => d.symbol);
+
+                const { data, error } = await db.from('hasil_scan').select('*').order('price', { ascending: false });
+                if (error) throw error;
+                if (!data || data.length === 0) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-mwarn font-sans">NO DATA. RUN SCANNER.</td></tr>`; return; }
+                globalData = data; data.forEach(item => { if(item.chart_data) bankDataCarta[item.symbol] = item.chart_data; });
+                const elHeader = document.getElementById('lastUpdatedHeader');
+                if (data[0] && data[0].created_at && elHeader) { elHeader.innerText = `UPDATED: ${new Date(data[0].created_at).toLocaleString('en-US')}`; }
+                
+                renderJadual();
+                
+                if(!currentSymbol && globalData.length > 0) {
+                    bukaChart(globalData[0].symbol);
+                }
+            } catch (err) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-msell font-bold font-sans">CONNECTION FAILED</td></tr>`; }
+        }
+
+        function getSignalBadge(signal) {
+            let sColor = 'text-gray-500 dark:text-gray-500 border-gray-300 dark:border-tv-600 bg-gray-100 dark:bg-tv-800'; let sLabel = 'NEUTRAL'; let sRank = 2;
+            if(signal) {
+                if(signal.includes('STRONG BUY')) { sColor = 'text-mbuy border-mbuy/40 bg-mbuy/10'; sLabel = 'STRONG BUY'; sRank = 5; }
+                else if(signal.includes('MONITOR')) { sColor = 'text-accent-500 border-accent-500/40 bg-accent-500/10'; sLabel = 'MONITOR'; sRank = 4; }
+                else if(signal.includes('PULLBACK')) { sColor = 'text-mwarn border-mwarn/40 bg-mwarn/10'; sLabel = 'PULLBACK'; sRank = 3; }
+                else if(signal.includes('AVOID')) { sColor = 'text-msell border-msell/40 bg-msell/10'; sLabel = 'AVOID'; sRank = 1; }
+            }
+            return { color: sColor, label: sLabel, rank: sRank };
+        }
+
+        function renderJadual() {
+            if(currentTab === 'tabIndices') return;
+            const tbody = document.getElementById('tableBody'); if(!tbody) return; tbody.innerHTML = '';
+            let dataPaparan = [...globalData];
+
+            if (currentTab === 'tabWatchlist') {
+                dataPaparan = dataPaparan.filter(d => watchlist.includes(d.symbol));
+            }
+
+            const carian = document.getElementById('carianKaunter').value.toUpperCase();
+            if (carian) {
+                dataPaparan = dataPaparan.filter(item => {
+                    let fa = {}; try { fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {}; } catch(e){}
+                    const cName = (item.name || fa.shortName || '').toUpperCase();
+                    const cSym = item.symbol.toUpperCase();
+                    return cSym.includes(carian) || cName.includes(carian);
+                });
+            }
+
+            if (currentTab === 'tabGainers') dataPaparan.sort((a, b) => (b.change_pct || 0) - (a.change_pct || 0));
+            else if (currentTab === 'tabActive') dataPaparan.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+            else {
+                if (currentTab === 'tabScanner') {
+                    const sMinP = parseFloat(document.getElementById('scanMinP').value) || 0; const sMaxP = parseFloat(document.getElementById('scanMaxP').value) || 9999;
+                    const sMinVolLots = parseFloat(document.getElementById('scanMinVol').value) || 0; const sSigFilter = document.getElementById('scanSignal').value;
+                    dataPaparan = dataPaparan.filter(item => {
+                        if (item.price < sMinP || item.price > sMaxP) return false;
+                        if (Math.floor((item.volume || 0)/100) < sMinVolLots) return false;
+                        if (sSigFilter !== 'ALL' && (!item.signal || !item.signal.includes(sSigFilter))) return false;
+                        return true;
+                    });
+                }
+                dataPaparan.sort((a, b) => {
+                    let valA, valB;
+                    if (currentSortCol === 'price') { valA = a.price; valB = b.price; }
+                    else if (currentSortCol === 'change') { valA = a.change_pct; valB = b.change_pct; }
+                    else if (currentSortCol === 'volume') { valA = a.volume; valB = b.volume; }
+                    else if (currentSortCol === 'signal') { valA = getSignalBadge(a.signal).rank; valB = getSignalBadge(b.signal).rank; }
+                    else { valA = a.symbol; valB = b.symbol; }
+                    if(valA < valB) return isAscending ? -1 : 1; if(valA > valB) return isAscending ? 1 : -1; return 0;
+                });
+            }
+
+            document.getElementById('kiraanKaunter').innerText = `${dataPaparan.length} MATCHES`;
+            if (dataPaparan.length === 0) { tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-500 font-sans">NO MATCHES FOUND.</td></tr>`; return; }
+
+            dataPaparan.forEach(item => {
+                const isWl = watchlist.includes(item.symbol); const chgPct = item.change_pct || 0; const chg = item.change || 0;
+                let colorChg = 'text-gray-500 dark:text-gray-400'; let sign = '';
+                if (chgPct > 0) { colorChg = 'text-mbuy'; sign = '+'; } else if (chgPct < 0) { colorChg = 'text-msell'; }
+                let lots = Math.floor((item.volume || 0) / 100); const badge = getSignalBadge(item.signal);
+                let compName = ''; try { let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {}; compName = item.name || fa.shortName || ''; } catch(e){}
+
+                const svgStarFilled = `<svg class="w-4 h-4 mx-auto text-accent-500 star-svg" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>`;
+                const svgStarOutline = `<svg class="w-4 h-4 mx-auto text-gray-300 dark:text-tv-600 hover:text-accent-500 transition star-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>`;
+
+                const trClass = currentSymbol === item.symbol 
+                    ? "bg-blue-50 dark:bg-tv-700/50 border-b border-gray-200 dark:border-tv-700 cursor-pointer transition-colors" 
+                    : "hover:bg-gray-100 dark:hover:bg-tv-800/80 transition-colors border-b border-gray-200 dark:border-tv-700 cursor-pointer";
+
+                tbody.innerHTML += `
+                    <tr class="${trClass}" onclick="bukaChart('${item.symbol}')">
+                        <td class="px-3 py-2 text-center align-middle cursor-pointer hover:bg-gray-200 dark:hover:bg-tv-700 transition" onclick="event.stopPropagation(); toggleWatchlist('${item.symbol}')">${isWl ? svgStarFilled : svgStarOutline}</td>
+                        <td class="px-3 py-2 align-middle">
+                            <div class="font-bold text-slate-800 dark:text-white text-sm font-sans">${item.symbol.replace('.KL', '')}</div>
+                        </td>
+                        <td class="px-3 py-2 align-middle"><div class="text-[11px] font-bold text-gray-600 dark:text-gray-300 font-sans max-w-[130px] whitespace-normal leading-tight">${compName}</div></td>
+                        <td class="px-3 py-2 align-middle"><div class="text-[9px] text-gray-500 font-sans tracking-widest uppercase whitespace-normal break-words max-w-[80px] leading-tight">${item.sector || '-'}</div></td>
+                        <td class="px-3 py-2 align-middle text-right"><div class="font-bold text-gray-800 dark:text-gray-100 text-sm">${Number(item.price || 0).toFixed(3)}</div></td>
+                        <td class="px-3 py-2 align-middle text-right">
+                            <div class="font-bold ${colorChg} text-sm">${sign}${chg.toFixed(3)}</div>
+                            <div class="text-[10px] ${colorChg} font-sans tracking-wide font-semibold">${sign}${chgPct.toFixed(2)}%</div>
+                        </td>
+                        <td class="px-3 py-2 align-middle text-right text-gray-600 dark:text-gray-400 font-bold text-sm">${lots.toLocaleString()}</td>
+                        <td class="px-3 py-2 align-middle text-center font-sans">
+                            <span class="px-2 py-0.5 text-[9px] font-bold tracking-wider rounded border cursor-pointer hover:opacity-80 transition ${badge.color}" onclick="event.stopPropagation(); bukaSignalInfo('${item.symbol}')">${badge.label.replace('CLOSELY', '')}</span>
+                        </td>
+                        <td class="px-3 py-2 align-middle text-center font-sans">
+                            <button onclick="event.stopPropagation(); bukaFA('${item.symbol}')" class="text-gray-500 hover:text-accent-500 text-[10px] px-2 py-1 font-bold border border-gray-300 dark:border-tv-600 rounded-sm transition bg-white dark:bg-tv-800">FUNDAMENTAL</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function bukaSignalInfo(simbol) {
+            const item = globalData.find(d => d.symbol === simbol); if (!item) return;
+            let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {};
+            let price = Number(item.price || 0).toFixed(3); let ema50 = fa.ema_50 ? Number(fa.ema_50).toFixed(3) : "N/A";
+            let ema20 = fa.ema_20 ? Number(fa.ema_20).toFixed(3) : "N/A"; let bbUp = fa.bb_upper ? Number(fa.bb_upper).toFixed(3) : "N/A";
+            let h20 = fa.high_20 ? Number(fa.high_20).toFixed(3) : "N/A"; let vTerkini = item.volume || 0; let v20 = fa.vol_20ma || 0;
+            let volRatio = v20 > 0 ? ((vTerkini / v20) * 100).toFixed(0) : 0; let content = '';
+
+            if (item.signal.includes('STRONG BUY')) {
+                content = `<div class="p-3 bg-mbuy/10 border-l-2 border-mbuy text-mbuy mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: STRONG BUY (BREAKOUT)<br/><span class="text-[10px] font-normal">Turtle + BB Breakout detected.</span></div>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Price (${price}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">BOLLINGER:</span> Broke upper band (${bbUp}).</li><li><span class="text-gray-800 dark:text-gray-200">RESISTANCE:</span> Passed 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> ${volRatio}% of 20-day avg.</li></ul>`;
+            } else if (item.signal.includes('MONITOR')) {
+                content = `<div class="p-3 bg-accent-500/10 border-l-2 border-accent-500 text-accent-500 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: MONITOR CLOSELY (VCP)<br/><span class="text-[10px] font-normal">Potential setup building.</span></div>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> EMA20 (${ema20}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">PRICE ACTION:</span> Resting near 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> Drying up (${volRatio}% of avg).</li></ul>`;
+            } else if (item.signal.includes('PULLBACK')) {
+                content = `<div class="p-3 bg-mwarn/10 border-l-2 border-mwarn text-mwarn mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: PULLBACK (DIP)<br/><span class="text-[10px] font-normal">Healthy correction in progress.</span></div>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Near EMA20 (${ema20}) / EMA50 (${ema50}) support.</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> Low selling pressure (${volRatio}% of avg).</li></ul>`;
+            } else {
+                content = `<div class="p-3 bg-gray-200 dark:bg-tv-700 border-l-2 border-gray-400 text-gray-700 dark:text-gray-300 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: NEUTRAL / AVOID<br/><span class="text-[10px] font-normal">Sideways or downtrend.</span></div>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">PRICE:</span> ${price}.</li><li><span class="text-gray-800 dark:text-gray-200">TREND MA50:</span> ${ema50}.</li></ul>`;
+            }
+            document.getElementById('signalContent').innerHTML = content; document.getElementById('signalModal').classList.add('show');
+        }
+        function tutupSignal() { document.getElementById('signalModal').classList.remove('show'); }
+
+        function bukaFA(simbol) {
+            const item = globalData.find(d => d.symbol === simbol); if (!item) return;
+            document.getElementById('faSymbol').innerText = simbol.replace('.KL', ''); document.getElementById('faSector').innerText = item.sector || 'N/A';
+            let pe = '-', pb = '-', eps = '-', shares = '-', float = '-', div = '-', cap = '-', netInc = '-', debt = '-', roe = '-';
+            if (item.fa_data) {
+                let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data;
+                if(fa.pe_ratio) pe = parseFloat(fa.pe_ratio).toFixed(2); if(fa.pb_ratio) pb = parseFloat(fa.pb_ratio).toFixed(2);
+                if(fa.eps) eps = parseFloat(fa.eps).toFixed(3); if(fa.div_yield) div = (parseFloat(fa.div_yield) * 100).toFixed(2) + '%';
+                if(fa.roe) roe = (parseFloat(fa.roe) * 100).toFixed(2) + '%';
+                cap = formatNomborPendek(fa.market_cap); shares = formatBillion(fa.shares_out); float = formatNomborPendek(fa.float_shares);
+                netInc = formatNomborPendek(fa.net_income); debt = formatNomborPendek(fa.total_debt);
+            }
+            document.getElementById('faPE').innerText = pe; document.getElementById('faPB').innerText = pb; document.getElementById('faEPS').innerText = eps;
+            document.getElementById('faDiv').innerText = div; document.getElementById('faCap').innerText = cap; document.getElementById('faShares').innerText = shares;
+            document.getElementById('faFloat').innerText = float; document.getElementById('faNetInc').innerText = netInc; document.getElementById('faDebt').innerText = debt;
+            const roeEl = document.getElementById('faROE'); roeEl.innerText = roe; roeEl.className = "font-bold text-sm"; 
+            if (roe !== '-' && !roe.includes('-')) roeEl.classList.add('text-mbuy'); else if (roe.includes('-')) roeEl.classList.add('text-msell');
+            document.getElementById('faModal').classList.add('show');
+        }
+        function tutupFA() { document.getElementById('faModal').classList.remove('show'); }
+
+        function kiraIndikator(dataCarta) {
+            let ema50Data=[], spanAData=[], spanBData=[], turtleUpData=[], turtleDownData=[];
+            let bbUpData=[], bbDownData=[], macdLineData=[], macdSigData=[], macdHistData=[];
+            let volAvg20Data = []; 
+            
+            if(dataCarta.length === 0) return { MathEma:[], MathSpanA:[], MathSpanB:[], MathTup:[], MathTdn:[], MathBBUp:[], MathBBDn:[], MathMacdL:[], MathMacdS:[], MathMacdH:[], MathVolAvg20:[] };
+            
+            let k = 2 / (50 + 1); let ema = dataCarta[0].close;
+            let k12 = 2/13, k26 = 2/27, k9 = 2/10;
+            let ema12 = dataCarta[0].close, ema26 = dataCarta[0].close, ema9 = 0;
+
+            let futureDates = []; let currD = new Date(dataCarta[dataCarta.length-1].time);
+            while(futureDates.length < 26) { currD.setDate(currD.getDate() + 1); if(currD.getDay() !== 0 && currD.getDay() !== 6) futureDates.push(currD.toISOString().split('T')[0]); }
+
+            for (let i = 0; i < dataCarta.length; i++) {
+                ema = (dataCarta[i].close - ema) * k + ema;
+                ema50Data.push({ time: dataCarta[i].time, value: ema });
+
+                ema12 = (dataCarta[i].close - ema12) * k12 + ema12;
+                ema26 = (dataCarta[i].close - ema26) * k26 + ema26;
+                let macd = ema12 - ema26;
+                if(i === 0) ema9 = macd; else ema9 = (macd - ema9) * k9 + ema9;
+                let hist = macd - ema9;
+                macdLineData.push({ time: dataCarta[i].time, value: macd });
+                macdSigData.push({ time: dataCarta[i].time, value: ema9 });
+                macdHistData.push({ time: dataCarta[i].time, value: hist, color: hist >= 0 ? '#26a69a' : '#ef5350' });
+
+                if (i > 0) {
+                    let startIdx = Math.max(0, i - 20);
+                    let lookback = dataCarta.slice(startIdx, i); 
+                    turtleUpData.push({ time: dataCarta[i].time, value: Math.max(...lookback.map(d=>d.high)) });
+                    turtleDownData.push({ time: dataCarta[i].time, value: Math.min(...lookback.map(d=>d.low)) });
+                    
+                    let volSum = lookback.reduce((a,b) => a + (b.volume || 0), 0);
+                    let volAvg20 = volSum / lookback.length;
+                    volAvg20Data.push({ time: dataCarta[i].time, value: volAvg20 });
+                }
+
+                if (i >= 19) {
+                    let slice = dataCarta.slice(i-19, i+1);
+                    let sum = slice.reduce((a,b)=>a+b.close, 0); let sma20 = sum/20;
+                    let sqSum = slice.reduce((a,b)=>a + Math.pow(b.close - sma20, 2), 0);
+                    let stdDev = Math.sqrt(sqSum / 20);
+                    bbUpData.push({ time: dataCarta[i].time, value: sma20 + 2*stdDev });
+                    bbDownData.push({ time: dataCarta[i].time, value: sma20 - 2*stdDev });
+                }
+
+                let tenkan = null, kijun = null, sB = null;
+                if (i >= 8) { let slice = dataCarta.slice(i-8, i+1); tenkan = (Math.max(...slice.map(d=>d.high)) + Math.min(...slice.map(d=>d.low))) / 2; }
+                if (i >= 25) { let slice = dataCarta.slice(i-25, i+1); kijun = (Math.max(...slice.map(d=>d.high)) + Math.min(...slice.map(d=>d.low))) / 2; }
+                if (i >= 51) { let slice = dataCarta.slice(i-51, i+1); sB = (Math.max(...slice.map(d=>d.high)) + Math.min(...slice.map(d=>d.low))) / 2; }
+                let targetTime = (i + 26 < dataCarta.length) ? dataCarta[i+26].time : futureDates[(i+26)-dataCarta.length];
+                if (tenkan !== null && kijun !== null) spanAData.push({ time: targetTime, value: (tenkan + kijun)/2 });
+                if (sB !== null) spanBData.push({ time: targetTime, value: sB });
+            }
+            return { MathEma: ema50Data, MathSpanA: spanAData, MathSpanB: spanBData, MathTup: turtleUpData, MathTdn: turtleDownData, 
+                     MathBBUp: bbUpData, MathBBDn: bbDownData, MathMacdL: macdLineData, MathMacdS: macdSigData, MathMacdH: macdHistData, MathVolAvg20: volAvg20Data };
+        }
+
+        function toggleIndicators() {
+            if(!lineEMA50) return;
+            lineEMA50.applyOptions({ visible: document.getElementById('toggleEMA').checked });
+            const ichiVis = document.getElementById('toggleIchi').checked;
+            lineSpanA.applyOptions({ visible: ichiVis }); lineSpanB.applyOptions({ visible: ichiVis });
+            const turtleVis = document.getElementById('toggleTurtle').checked;
+            lineHigh20.applyOptions({ visible: turtleVis }); lineLow20.applyOptions({ visible: turtleVis });
+            const bbVis = document.getElementById('toggleBB').checked;
+            lineBBUp.applyOptions({ visible: bbVis }); lineBBDown.applyOptions({ visible: bbVis });
+        }
+
+        function bukaChart(simbol) {
+            currentSymbol = simbol;
+            
+            renderJadual();
+
+            const item = globalData.find(d => d.symbol === simbol);
+            let compName = '';
+            if(item) { try { let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data; compName = item.name || fa?.shortName || ''; } catch(e){} }
+            document.getElementById('chartSubtitle').innerText = `${simbol.replace('.KL','')} | ${compName}`;
+            
+            const container = document.getElementById('tvChartContainer'); 
+            container.innerHTML = ''; 
+            
+            chartInstance = LightweightCharts.createChart(container, {
+                width: container.clientWidth, 
+                height: container.clientHeight || 500,
+                layout: { backgroundColor: '#ffffff', textColor: '#475569', fontFamily: 'JetBrains Mono' },
+                grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(0, 0, 0, 0.05)' } },
+                timeScale: { borderColor: '#e2e8f0' }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                rightPriceScale: { scaleMargins: { top: 0.05, bottom: 0.35 } },
+                leftPriceScale: { visible: false, scaleMargins: { top: 0.8, bottom: 0 } }
+            });
+
+            if(chartResizeObserver) { chartResizeObserver.disconnect(); }
+            chartResizeObserver = new ResizeObserver(entries => {
+                if(entries.length === 0 || entries[0].target !== container) return;
+                const newRect = entries[0].contentRect;
+                chartInstance.applyOptions({ width: newRect.width, height: newRect.height });
+            });
+            chartResizeObserver.observe(container);
+
+            candleSeries = chartInstance.addCandlestickSeries({ upColor: '#089981', downColor: '#F23645', borderVisible: false, wickUpColor: '#089981', wickDownColor: '#F23645' });
+            
+            volumeSeries = chartInstance.addHistogramSeries({ color: 'rgba(41, 98, 255, 0.5)', priceFormat: { type: 'volume' }, priceScaleId: '' });
+            chartInstance.priceScale('').applyOptions({ scaleMargins: { top: 0.65, bottom: 0.20 } });
+
+            chartInstance.priceScale('macd').applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
+
+            lineEMA50 = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 2, crosshairMarkerVisible: false, visible: false }); 
+            lineHigh20 = chartInstance.addLineSeries({ color: '#000000', lineWidth: 2, crosshairMarkerVisible: false, lineStyle: 0, visible: false }); 
+            lineLow20 = chartInstance.addLineSeries({ color: '#000000', lineWidth: 2, crosshairMarkerVisible: false, lineStyle: 0, visible: false }); 
+            lineSpanA = chartInstance.addLineSeries({ color: '#089981', lineWidth: 1, crosshairMarkerVisible: false, lineStyle: 2, visible: false }); 
+            lineSpanB = chartInstance.addLineSeries({ color: '#F23645', lineWidth: 1, crosshairMarkerVisible: false, lineStyle: 2, visible: false }); 
+            lineBBUp = chartInstance.addLineSeries({ color: 'rgba(59, 130, 246, 0.6)', lineWidth: 1, crosshairMarkerVisible: false, visible: false }); 
+            lineBBDown = chartInstance.addLineSeries({ color: 'rgba(59, 130, 246, 0.6)', lineWidth: 1, crosshairMarkerVisible: false, visible: false }); 
+            
+            lineMACD = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, priceScaleId: 'left', crosshairMarkerVisible: false });
+            lineSignalMACD = chartInstance.addLineSeries({ color: '#FF9800', lineWidth: 1, priceScaleId: 'left', crosshairMarkerVisible: false });
+            histMACD = chartInstance.addHistogramSeries({ priceScaleId: 'left' });
+
+            lineVolAvg = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false, priceScaleId: '', lineStyle: 0 });
+
+            tukarTimeframe('1D');
+        }
+
+        function tukarTimeframe(tf) {
+            ['1D', '1W', '1M'].forEach(t => {
+                const btn = document.getElementById(`tf-${t}`);
+                if(btn) {
+                    if (t === tf) { btn.classList.add('bg-gray-200', 'dark:bg-tv-600', 'text-accent-500', 'dark:text-white'); btn.classList.remove('text-gray-500', 'dark:text-gray-400'); }
+                    else { btn.classList.remove('bg-gray-200', 'dark:bg-tv-600', 'text-accent-500', 'dark:text-white'); btn.classList.add('text-gray-500', 'dark:text-gray-400'); }
+                }
+            });
+            
+            let dataRaw = bankDataCarta[currentSymbol];
+            if (!dataRaw) { document.getElementById('chartError').innerText = "NO DATA STORED."; document.getElementById('chartError').classList.remove('hidden'); return; }
+            document.getElementById('chartError').classList.add('hidden');
+
+            if (typeof dataRaw === 'string') { try { dataRaw = JSON.parse(dataRaw); } catch(e){} }
+            dataRaw.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+            
+            let dataLilin = []; let dataVol = [];
+            
+            if (tf === '1D') {
+                let unq = new Set();
+                dataRaw.forEach(i => {
+                    if (i.time && !unq.has(i.time)) {
+                        unq.add(i.time); let grn = parseFloat(i.close) >= parseFloat(i.open);
+                        dataLilin.push({ time: i.time, open: parseFloat(i.open), high: parseFloat(i.high), low: parseFloat(i.low), close: parseFloat(i.close), volume: parseFloat(i.volume || 0) });
+                        dataVol.push({ time: i.time, value: parseFloat(i.volume||0), color: grn ? 'rgba(8, 153, 129, 0.4)' : 'rgba(242, 54, 69, 0.4)' });
+                    }
+                });
+            } else {
+                let lS = null;
+                dataRaw.forEach(d => {
+                    if (!d.time) return;
+                    let dt = new Date(d.time); let k = '';
+                    if (tf === '1W') { let dy = new Date(dt); let dN = dy.getDay(); dy.setDate(dy.getDate() - dN + (dN===0?-6:1)); k = dy.toISOString().split('T')[0]; } 
+                    else if (tf === '1M') { k = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-01`; }
+
+                    let pO = parseFloat(d.open); let pH = parseFloat(d.high); let pL = parseFloat(d.low); let pC = parseFloat(d.close); let pV = parseFloat(d.volume||0);
+
+                    if (!lS || lS.k !== k) {
+                        if (lS) {
+                            let grn = lS.c >= lS.o; dataLilin.push({ time: lS.t, open: lS.o, high: lS.h, low: lS.l, close: lS.c, volume: lS.v });
+                            dataVol.push({ time: lS.t, value: lS.v, color: grn ? 'rgba(8, 153, 129, 0.4)' : 'rgba(242, 54, 69, 0.4)' });
+                        }
+                        lS = { k: k, t: k, o: pO, h: pH, l: pL, c: pC, v: pV };
+                    } else { lS.h = Math.max(lS.h, pH); lS.l = Math.min(lS.l, pL); lS.c = pC; lS.v += pV; }
+                });
+                if (lS) {
+                    let grn = lS.c >= lS.o; dataLilin.push({ time: lS.t, open: lS.o, high: lS.h, low: lS.l, close: lS.c, volume: lS.v });
+                    dataVol.push({ time: lS.t, value: lS.v, color: grn ? 'rgba(8, 153, 129, 0.4)' : 'rgba(242, 54, 69, 0.4)' });
+                }
+            }
+
+            candleSeries.setData(dataLilin); volumeSeries.setData(dataVol);
+
+            if (tf === '1D') {
+                const mathIndi = kiraIndikator(dataLilin);
+                lineEMA50.setData(mathIndi.MathEma); 
+                lineHigh20.setData(mathIndi.MathTup); lineLow20.setData(mathIndi.MathTdn);
+                lineSpanA.setData(mathIndi.MathSpanA); lineSpanB.setData(mathIndi.MathSpanB);
+                lineBBUp.setData(mathIndi.MathBBUp); lineBBDown.setData(mathIndi.MathBBDn);
+                lineMACD.setData(mathIndi.MathMacdL); lineSignalMACD.setData(mathIndi.MathMacdS); histMACD.setData(mathIndi.MathMacdH);
+                lineVolAvg.setData(mathIndi.MathVolAvg20); 
+            } else {
+                lineEMA50.setData([]); lineHigh20.setData([]); lineLow20.setData([]); lineSpanA.setData([]); lineSpanB.setData([]);
+                lineBBUp.setData([]); lineBBDown.setData([]); lineMACD.setData([]); lineSignalMACD.setData([]); histMACD.setData([]);
+                lineVolAvg.setData([]);
+            }
+
+            toggleIndicators(); 
+            chartInstance.timeScale().fitContent();
+        }
+
+        function bukaTradingViewAdvanced() { if(!currentSymbol) return; window.open(`https://www.tradingview.com/chart/?symbol=MYX:${currentSymbol.replace('.KL', '')}`, '_blank'); }
+
+        window.onload = muatTurunData;
+    </script>
+</body>
+</html>
