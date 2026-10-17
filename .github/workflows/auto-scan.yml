@@ -2,10 +2,8 @@ name: Bursa Auto Scanner
 
 on:
   schedule:
-    # Masa dalam UTC (9:30 AM UTC = 5:30 PM Waktu Malaysia)
-    # Lari setiap Isnin hingga Jumaat (1-5)
     - cron: '30 9 * * 1-5'
-  workflow_dispatch: # Membenarkan kau tekan run secara manual pada bila-bila masa
+  workflow_dispatch:
 
 jobs:
   scan-bursa:
@@ -13,17 +11,17 @@ jobs:
     
     steps:
       - name: Checkout kod projek
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Pasang Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           
       - name: Install Pakej (NPM)
         run: npm install
         
-      - name: Jalankan Enjin Scanner (Tarik Data Yahoo & Hantar ke Supabase)
+      - name: Jalankan Enjin Scanner
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
