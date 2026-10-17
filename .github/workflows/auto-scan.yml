@@ -1,0 +1,30 @@
+name: Bursa Auto Scanner
+
+on:
+  schedule:
+    # Masa dalam UTC (9:30 AM UTC = 5:30 PM Waktu Malaysia)
+    # Lari setiap Isnin hingga Jumaat (1-5)
+    - cron: '30 9 * * 1-5'
+  workflow_dispatch: # Membenarkan kau tekan run secara manual pada bila-bila masa
+
+jobs:
+  scan-bursa:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout kod projek
+        uses: actions/checkout@v3
+      
+      - name: Pasang Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install Pakej (NPM)
+        run: npm install
+        
+      - name: Jalankan Enjin Scanner (Tarik Data Yahoo & Hantar ke Supabase)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node scanner.mjs
