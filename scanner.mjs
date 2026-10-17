@@ -66,7 +66,7 @@ async function jalankanScannerMomentum() {
             const senaraiHarga = dataSejarah.quotes; 
             
             if (!senaraiHarga || senaraiHarga.length < 50) {
-                await rehatSeketika(300); continue; 
+                await rehatSeketika(500); continue; 
             }
 
             let dataHigh = [], dataLow = [], dataClose = [], dataVolume = [];
@@ -79,7 +79,7 @@ async function jalankanScannerMomentum() {
 
             if(dataVolume[dataVolume.length - 1] === 0 && dataVolume[dataVolume.length - 2] === 0) {
                 console.log(`    -> ⚠️ DIKETEPIKAN (Tiada Volume/Digantung)`);
-                await rehatSeketika(200); continue;
+                await rehatSeketika(300); continue;
             }
 
             const hargaTerkini = dataClose[dataClose.length - 1];
@@ -151,24 +151,15 @@ async function jalankanScannerMomentum() {
                 book_value = quoteData.bookValue || null;
                 div_yield = quoteData.dividendYield || null;
                 
-                try {
-                    const profile = await yahooFinance.quoteSummary(simbol, { modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] });
-                    sektorSyarikat = profile.assetProfile?.sector || 'N/A';
-                    let industri = profile.assetProfile?.industry || '';
-                    
-                    let textCheck = (sektorSyarikat + " " + industri).toLowerCase();
-                    let isHaram = industriHaram.some(keyword => textCheck.includes(keyword));
-                    if (isHaram) {
-                        console.log(`    -> 🛑 DIKETEPIKAN (Tidak Patuh Syariah: ${industri})`);
-                        await rehatSeketika(300);
-                        continue; 
+                if (quoteData.sector) {
+                    sektorSyarikat = quoteData.sector;
+                    let textCheck = (sektorSyarikat).toLowerCase();
+                    if (industriHaram.some(keyword => textCheck.includes(keyword))) {
+                        console.log(`    -> 🛑 DIKETEPIKAN (Bukan Shariah: ${sektorSyarikat})`);
+                        await rehatSeketika(500);
+                        continue;
                     }
-                    faExtras.float_shares = profile.defaultKeyStatistics?.floatShares || null;
-                    faExtras.pb_ratio = profile.defaultKeyStatistics?.priceToBook || null;
-                    faExtras.total_debt = profile.financialData?.totalDebt || null;
-                    faExtras.net_income = profile.financialData?.netIncomeToCommon || null;
-                    faExtras.roe = profile.financialData?.returnOnEquity || null;
-                } catch(e){} 
+                }
             } catch(e) {
                 if(dataClose.length > 1) {
                     changeRM = hargaTerkini - dataClose[dataClose.length - 2];
@@ -198,9 +189,9 @@ async function jalankanScannerMomentum() {
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Data: Pasaran Tiada Maklumat`);
+            console.log(`    -> ⚠️ Ralat Data: Skip ${simbol}`);
         }
-        await rehatSeketika(300); 
+        await rehatSeketika(500); 
     }
     console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis.`);
 }
