@@ -4,13 +4,13 @@ import { EMA, SMA, BollingerBands } from 'technicalindicators';
 import { createClient } from '@supabase/supabase-js';
 
 // ==========================================
-// 1. CONFIGURATION SUPABASE (GUNA GITHUB SECRETS)
+// 1. CONFIGURATION SUPABASE (GITHUB SECRETS)
 // ==========================================
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-    console.error("❌ Kunci Supabase tidak dijumpai dalam sistem persekitaran (Environment Variables).");
+    console.error("❌ Kunci Supabase tidak dijumpai dalam Environment Variables.");
     process.exit(1);
 }
 
@@ -20,12 +20,13 @@ const rehatSeketika = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function jalankanScannerMomentum() {
     if (!fs.existsSync('senarai_bursa.json')) {
-        console.log("❌ Fail 'senarai_bursa.json' tiada. Sila jana dahulu.");
+        console.log("❌ Fail 'senarai_bursa.json' tiada.");
         return;
     }
 
     const masterList = JSON.parse(fs.readFileSync('senarai_bursa.json', 'utf8'));
     
+    // Tapis hanya Induk & Waran Syarikat sahaja
     const senaraiSaham = masterList.filter(item => {
         const baseCode = item.symbol.replace('.KL', '');
         const isMotherShare = /^[A-Z0-9]{3,4}$/i.test(baseCode);
@@ -34,8 +35,7 @@ async function jalankanScannerMomentum() {
     });
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (FRED TAM + ZANGER)`);
-    console.log(`🛡️  FILTER AKTIF: Anti-Waran Struktur & Penapis Shariah`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (GITHUB CLOUD OPTIMIZED)`);
     console.log(`📊 JUMLAH SAHAM DIPROSES: ${senaraiSaham.length} Kaunter`);
     console.log("=====================================================\n");
 
@@ -62,11 +62,14 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
+            // Rehat 800ms setiap kali kaunter diimbas (mencegah sekatan IP oleh Yahoo)
+            await rehatSeketika(800);
+
             const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
-            const senaraiHarga = dataSejarah.quotes; 
+            const senaraiHarga = dataSejarah?.quotes; 
             
             if (!senaraiHarga || senaraiHarga.length < 50) {
-                await rehatSeketika(500); continue; 
+                continue; 
             }
 
             let dataHigh = [], dataLow = [], dataClose = [], dataVolume = [];
@@ -79,7 +82,7 @@ async function jalankanScannerMomentum() {
 
             if(dataVolume[dataVolume.length - 1] === 0 && dataVolume[dataVolume.length - 2] === 0) {
                 console.log(`    -> ⚠️ DIKETEPIKAN (Tiada Volume/Digantung)`);
-                await rehatSeketika(300); continue;
+                continue;
             }
 
             const hargaTerkini = dataClose[dataClose.length - 1];
@@ -138,33 +141,10 @@ async function jalankanScannerMomentum() {
             let sektorSyarikat = 'N/A';
             let faExtras = { float_shares: null, pb_ratio: null, total_debt: null, net_income: null, roe: null };
 
-            try {
-                const quoteData = await yahooFinance.quote(simbol);
-                changeRM = quoteData.regularMarketChange || (hargaTerkini - dataClose[dataClose.length - 2]);
-                changePct = quoteData.regularMarketChangePercent || ((changeRM / dataClose[dataClose.length - 2]) * 100);
-                namaSyarikat = quoteData.shortName || quoteData.longName || item.name;
-
-                pe_ratio = quoteData.trailingPE || null;
-                market_cap = quoteData.marketCap || null;
-                eps = quoteData.epsTrailingTwelveMonths || null;
-                shares_out = quoteData.sharesOutstanding || null;
-                book_value = quoteData.bookValue || null;
-                div_yield = quoteData.dividendYield || null;
-                
-                if (quoteData.sector) {
-                    sektorSyarikat = quoteData.sector;
-                    let textCheck = (sektorSyarikat).toLowerCase();
-                    if (industriHaram.some(keyword => textCheck.includes(keyword))) {
-                        console.log(`    -> 🛑 DIKETEPIKAN (Bukan Shariah: ${sektorSyarikat})`);
-                        await rehatSeketika(500);
-                        continue;
-                    }
-                }
-            } catch(e) {
-                if(dataClose.length > 1) {
-                    changeRM = hargaTerkini - dataClose[dataClose.length - 2];
-                    changePct = (changeRM / dataClose[dataClose.length - 2]) * 100;
-                }
+            // Guna data asas dari chart metadata jika quote terpaksa diringkaskan
+            if(dataClose.length > 1) {
+                changeRM = hargaTerkini - dataClose[dataClose.length - 2];
+                changePct = (changeRM / dataClose[dataClose.length - 2]) * 100;
             }
 
             const fa_data_json = {
@@ -181,19 +161,19 @@ async function jalankanScannerMomentum() {
                 fa_data: fa_data_json
             }]);
 
-            if (error) console.log(`    -> ⚠️ Gagal simpan: ${error.message}`);
-            else {
+            if (error) {
+                console.log(`    -> ⚠️ Gagal simpan: ${error.message}`);
+            } else {
                 let badge = statusSignal.includes('AVOID') ? '🔴' : '🟢';
                 console.log(`    -> ${badge} LULUS | Signal: ${statusSignal}`);
                 jumlahBerjaya++;
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Data: Skip ${simbol}`);
+            console.log(`    -> ⚠️ Ralat Yahoo (Diskip): ${simbol}`);
         }
-        await rehatSeketika(500); 
     }
-    console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis.`);
+    console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis dan disimpan ke Supabase.`);
 }
 
 jalankanScannerMomentum();
