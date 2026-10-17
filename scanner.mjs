@@ -35,7 +35,7 @@ async function jalankanScannerMomentum() {
     });
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (GITHUB CLOUD OPTIMIZED)`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & SECTOR ENABLED)`);
     console.log(`📊 JUMLAH SAHAM DIPROSES: ${senaraiSaham.length} Kaunter`);
     console.log("=====================================================\n");
 
@@ -62,8 +62,8 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
-            // Rehat 800ms setiap kali kaunter diimbas (mencegah sekatan IP oleh Yahoo)
-            await rehatSeketika(800);
+            // Rehat 600ms untuk mengelakkan sekatan IP oleh Yahoo Finance
+            await rehatSeketika(600);
 
             const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
             const senaraiHarga = dataSejarah?.quotes; 
@@ -141,10 +141,56 @@ async function jalankanScannerMomentum() {
             let sektorSyarikat = 'N/A';
             let faExtras = { float_shares: null, pb_ratio: null, total_debt: null, net_income: null, roe: null };
 
-            // Guna data asas dari chart metadata jika quote terpaksa diringkaskan
+            // Penentuan awal perubahan harga
             if(dataClose.length > 1) {
                 changeRM = hargaTerkini - dataClose[dataClose.length - 2];
                 changePct = (changeRM / dataClose[dataClose.length - 2]) * 100;
+            }
+
+            // === MENARIK DATA FA & SEKTOR DARIPADA YAHOO FINANCE ===
+            try {
+                const quoteData = await yahooFinance.quote(simbol);
+                if (quoteData) {
+                    changeRM = quoteData.regularMarketChange || changeRM;
+                    changePct = quoteData.regularMarketChangePercent || changePct;
+                    namaSyarikat = quoteData.shortName || quoteData.longName || item.name;
+
+                    pe_ratio = quoteData.trailingPE || null;
+                    market_cap = quoteData.marketCap || null;
+                    eps = quoteData.epsTrailingTwelveMonths || null;
+                    shares_out = quoteData.sharesOutstanding || null;
+                    book_value = quoteData.bookValue || null;
+                    div_yield = quoteData.dividendYield || null;
+                }
+            } catch(e) {
+                // Abaikan jika quote gagal, gunakan data lalai
+            }
+
+            try {
+                const profile = await yahooFinance.quoteSummary(simbol, { 
+                    modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] 
+                });
+
+                if (profile) {
+                    sektorSyarikat = profile.assetProfile?.sector || 'N/A';
+                    let industri = profile.assetProfile?.industry || '';
+                    
+                    // Semakan Penapis Syariah
+                    let textCheck = (sektorSyarikat + " " + industri).toLowerCase();
+                    let isHaram = industriHaram.some(keyword => textCheck.includes(keyword));
+                    if (isHaram) {
+                        console.log(`    -> 🛑 DIKETEPIKAN (Tidak Patuh Syariah: ${industri})`);
+                        continue; 
+                    }
+
+                    faExtras.float_shares = profile.defaultKeyStatistics?.floatShares || null;
+                    faExtras.pb_ratio = profile.defaultKeyStatistics?.priceToBook || null;
+                    faExtras.total_debt = profile.financialData?.totalDebt || null;
+                    faExtras.net_income = profile.financialData?.netIncomeToCommon || null;
+                    faExtras.roe = profile.financialData?.returnOnEquity || null;
+                }
+            } catch(e) {
+                // Abaikan jika profile gagal
             }
 
             const fa_data_json = {
@@ -165,12 +211,12 @@ async function jalankanScannerMomentum() {
                 console.log(`    -> ⚠️ Gagal simpan: ${error.message}`);
             } else {
                 let badge = statusSignal.includes('AVOID') ? '🔴' : '🟢';
-                console.log(`    -> ${badge} LULUS | Signal: ${statusSignal}`);
+                console.log(`    -> ${badge} LULUS | Sector: ${sektorSyarikat} | Signal: ${statusSignal}`);
                 jumlahBerjaya++;
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Yahoo (Diskip): ${simbol}`);
+            console.log(`    -> ⚠️ Ralat Data: Skip ${simbol}`);
         }
     }
     console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis dan disimpan ke Supabase.`);
