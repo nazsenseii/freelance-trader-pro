@@ -182,7 +182,8 @@
                     </div>
 
                     <div class="flex gap-2 font-mono mt-1">
-                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">FULL TV CHART</button>
+                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">Trading View</button>
+                        <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">KLSE Screener</button>
                     </div>
                 </div>
 
@@ -729,6 +730,7 @@
         }
 
         function bukaTradingViewAdvanced() { if(!currentSymbol) return; window.open(`https://www.tradingview.com/chart/?symbol=MYX:${currentSymbol.replace('.KL', '')}`, '_blank'); }
+        function bukaKLSEScreener() { if(!currentSymbol) return; window.open(`https://www.klsescreener.com/v2/stocks/view/${currentSymbol.replace('.KL', '')}`, '_blank'); }
 
         window.onload = muatTurunData;
     </script>
