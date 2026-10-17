@@ -13,10 +13,10 @@ jobs:
       - name: Checkout kod projek
         uses: actions/checkout@v4
       
-      - name: Pasang Node.js
+      - name: Pasang Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           
       - name: Install Pakej (NPM)
         run: npm install
