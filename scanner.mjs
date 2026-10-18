@@ -255,7 +255,7 @@ async function jalankanScannerMomentum() {
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol}`);
+            console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol} | Sebab: ${error.message}`);
         }
     }
     console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis dan disimpan ke Supabase.`);
