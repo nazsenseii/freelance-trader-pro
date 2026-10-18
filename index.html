@@ -102,7 +102,7 @@
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">SIGNAL FILTER</label>
                             <select id="scanSignal" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 font-sans font-semibold focus:border-accent-500">
                                 <option value="ALL">ALL SIGNALS</option>
-                                <option value="STRONG BUY">STRONG BUY</option>
+                                <option value="BUY">BUY</option>
                                 <option value="MONITOR CLOSELY">MONITOR CLOSELY</option>
                                 <option value="PULLBACK">PULLBACK</option>
                                 <option value="NEUTRAL">NEUTRAL</option>
@@ -127,7 +127,7 @@
                 </div>
 
                 <div id="panelTable" class="flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-tv-800 w-full">
-                    <table class="w-full text-left relative min-w-[900px]"> 
+                    <table class="w-full text-left relative min-w-[850px]"> 
                         <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
                             <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest select-none">
                                 <th class="px-3 py-2 w-10 text-center">★</th>
@@ -138,7 +138,7 @@
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('change')">CHANGE ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('volume')">VOLUME ↕️</th>
                                 <th class="px-3 py-2 text-center sortable whitespace-nowrap" onclick="setSort('signal')">SIGNAL ↕️</th>
-                                <th class="px-3 py-2 text-center whitespace-nowrap">FUNDAMENTAL</th>
+                                <th class="px-3 py-2 text-center whitespace-nowrap">FA</th>
                                 <th class="px-3 py-2 text-center sortable whitespace-nowrap" onclick="setSort('rating')">RATING ↕️</th>
                             </tr>
                         </thead>
@@ -167,23 +167,38 @@
 
             <div class="lg:col-span-5 bg-white dark:bg-tv-800 border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 rounded-sm panel-widget flex flex-col h-[500px] lg:h-[750px] overflow-hidden">
                 
-                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 dark:bg-tv-900 flex-wrap gap-3 shrink-0">
-                    <div class="flex flex-col gap-2 w-full sm:w-auto">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex flex-col gap-3 bg-gray-50 dark:bg-tv-900 shrink-0">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
                         <div class="flex flex-col">
                             <h3 class="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200 tracking-widest uppercase">TECHNICAL CHART</h3>
-                            <span id="chartSubtitle" class="text-base sm:text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[250px] sm:max-w-[300px] block">WAITING DATA...</span>
+                            <span id="chartSubtitle" class="text-base sm:text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[200px] sm:max-w-[280px] block">WAITING DATA...</span>
                         </div>
-                        
-                        <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono mt-1">
-                            <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-2 sm:px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
-                            <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
-                            <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
+                        <div class="flex gap-1.5 font-mono">
+                            <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[9px] sm:text-[10px] px-2 py-1 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">Trading View</button>
+                            <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[9px] sm:text-[10px] px-2 py-1 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">KLSE Screener</button>
                         </div>
                     </div>
+                    
+                    <div class="flex flex-wrap gap-4 items-center w-full">
+                        <!-- BUTTONS: TIME FRAME -->
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">TIME FRAME</span>
+                            <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono">
+                                <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-2 sm:px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
+                                <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
+                                <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
+                            </div>
+                        </div>
 
-                    <div class="flex gap-2 font-mono mt-1 w-full sm:w-auto justify-end">
-                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">Trading View</button>
-                        <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">KLSE Screener</button>
+                        <!-- BUTTONS: VIEW (ZOOM) -->
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">VIEW (ZOOM)</span>
+                            <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono">
+                                <button onclick="tukarView('6M')" id="view-6M" class="px-2 sm:px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">6 MONTH</button>
+                                <button onclick="tukarView('1Y')" id="view-1Y" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 YEAR</button>
+                                <button onclick="tukarView('2Y')" id="view-2Y" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">2 YEAR</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -275,7 +290,7 @@
         </div>
     </div>
 
-    <!-- MODAL RATING (DITAMBAH BARU) -->
+    <!-- MODAL RATING -->
     <div id="ratingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-tv-800 w-full max-w-sm rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content flex flex-col">
             <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0">
@@ -301,6 +316,7 @@
         
         let currentSymbol = ''; let currentSortCol = 'signal'; let isAscending = false;
         let chartResizeObserver = null; 
+        let currentView = '6M'; // DEFAULT VIEW SET TO 6 MONTH
 
         function tukarTema() {
             const toggle = document.getElementById('themeToggle');
@@ -405,7 +421,7 @@
         function getSignalBadge(signal) {
             let sColor = 'text-gray-500 dark:text-gray-500 border-gray-300 dark:border-tv-600 bg-gray-100 dark:bg-tv-800'; let sLabel = 'NEUTRAL'; let sRank = 2;
             if(signal) {
-                if(signal.includes('STRONG BUY')) { sColor = 'text-mbuy border-mbuy/40 bg-mbuy/10'; sLabel = 'STRONG BUY'; sRank = 5; }
+                if(signal.includes('STRONG BUY') || signal.includes('BUY')) { sColor = 'text-mbuy border-mbuy/40 bg-mbuy/10'; sLabel = 'BUY'; sRank = 5; }
                 else if(signal.includes('MONITOR')) { sColor = 'text-accent-500 border-accent-500/40 bg-accent-500/10'; sLabel = 'MONITOR'; sRank = 4; }
                 else if(signal.includes('PULLBACK')) { sColor = 'text-mwarn border-mwarn/40 bg-mwarn/10'; sLabel = 'PULLBACK'; sRank = 3; }
                 else if(signal.includes('NEW')) { sColor = 'text-purple-500 border-purple-500/40 bg-purple-500/10'; sLabel = 'NEW IPO'; sRank = 2; }
@@ -414,7 +430,6 @@
             return { color: sColor, label: sLabel, rank: sRank };
         }
 
-        // FUNGSI BARU UNTUK WARNA BUTANG FUNDAMENTAL BERDASARKAN MARKAH
         function getFaButtonClass(fa) {
             if (fa.is_warrant || fa.is_ipo) return "bg-gray-100 text-gray-500 border-gray-300 dark:bg-tv-700 dark:text-gray-400 dark:border-tv-600";
             let fScore = fa.fa_score || 0;
@@ -423,16 +438,15 @@
             return "bg-msell/10 text-msell border-msell/40 hover:bg-msell hover:text-white"; 
         }
 
-        // FUNGSI BARU UNTUK KOTAK RATING
         function getRatingHtml(fa) {
             if (fa.is_warrant) return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm border bg-blue-100 text-blue-600 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">WARAN 🏷️</span>`;
             if (fa.is_ipo) return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm border bg-purple-100 text-purple-600 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">IPO 🆕</span>`;
             
             let rate = fa.total_rating || 0;
             let hue = (rate / 10) * 120; // 0 = Merah, 120 = Hijau
-            let bgLightness = 50 - (rate / 10) * 20; // 10/10 jadi hijau gelap
+            let bgLightness = 50 - (rate / 10) * 20; 
             
-            return `<span class="px-2 py-0.5 text-[11px] font-bold tracking-widest rounded-sm shadow-sm text-white" style="background-color: hsl(${hue}, 85%, ${bgLightness}%); border: 1px solid hsl(${hue}, 85%, ${bgLightness - 10}%); text-shadow: 0px 1px 2px rgba(0,0,0,0.6);">${rate}/10 ★</span>`;
+            return `<span class="px-2 py-0.5 text-[11px] font-bold tracking-widest rounded-sm shadow-sm text-white" style="background-color: hsl(${hue}, 85%, ${bgLightness}%); border: 1px solid hsl(${hue}, 85%, ${bgLightness - 10}%); text-shadow: 0px 1px 2px rgba(0,0,0,0.6);">${rate}/10</span>`;
         }
 
         function renderJadual() {
@@ -519,7 +533,7 @@
                             <span class="px-2 py-0.5 text-[9px] font-bold tracking-wider rounded border cursor-pointer hover:opacity-80 transition ${badge.color}" onclick="event.stopPropagation(); bukaSignalInfo('${item.symbol}')">${badge.label.replace('CLOSELY', '')}</span>
                         </td>
                         <td class="px-3 py-2 align-middle text-center font-sans">
-                            <button onclick="event.stopPropagation(); bukaFA('${item.symbol}')" class="text-[10px] px-2 py-1 font-bold border rounded-sm transition ${getFaButtonClass(fa)}">FUNDAMENTAL</button>
+                            <button onclick="event.stopPropagation(); bukaFA('${item.symbol}')" class="text-[10px] px-2 py-1 font-bold border rounded-sm transition ${getFaButtonClass(fa)}">FA</button>
                         </td>
                         <td class="px-3 py-2 align-middle text-center font-sans cursor-pointer hover:opacity-80 transition" onclick="event.stopPropagation(); bukaRatingInfo('${item.symbol}')">
                             ${getRatingHtml(fa)}
@@ -529,7 +543,6 @@
             });
         }
 
-        // FUNGSI BARU UNTUK POPUP RATING
         function bukaRatingInfo(simbol) {
             const item = globalData.find(d => d.symbol === simbol); if (!item) return;
             let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {};
@@ -573,8 +586,8 @@
             let h20 = fa.high_20 ? Number(fa.high_20).toFixed(3) : "N/A"; let vTerkini = item.volume || 0; let v20 = fa.vol_20ma || 0;
             let volRatio = v20 > 0 ? ((vTerkini / v20) * 100).toFixed(0) : 0; let content = '';
 
-            if (item.signal.includes('STRONG BUY')) {
-                content = `<div class="p-3 bg-mbuy/10 border-l-2 border-mbuy text-mbuy mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: STRONG BUY (BREAKOUT)<br/><span class="text-[10px] font-normal">Turtle + BB Breakout detected.</span></div>
+            if (item.signal.includes('STRONG BUY') || item.signal.includes('BUY')) {
+                content = `<div class="p-3 bg-mbuy/10 border-l-2 border-mbuy text-mbuy mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: BUY (BREAKOUT)<br/><span class="text-[10px] font-normal">Turtle + BB Breakout detected.</span></div>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Price (${price}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">BOLLINGER:</span> Broke upper band (${bbUp}).</li><li><span class="text-gray-800 dark:text-gray-200">RESISTANCE:</span> Passed 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> ${volRatio}% of 20-day avg.</li></ul>`;
             } else if (item.signal.includes('MONITOR')) {
                 content = `<div class="p-3 bg-accent-500/10 border-l-2 border-accent-500 text-accent-500 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: MONITOR CLOSELY (VCP)<br/><span class="text-[10px] font-normal">Potential setup building.</span></div>
@@ -681,9 +694,51 @@
             lineBBUp.applyOptions({ visible: bbVis }); lineBBDown.applyOptions({ visible: bbVis });
         }
 
-        function bukaChart(simbol) {
+        function tukarView(v) {
+            currentView = v;
+            ['6M', '1Y', '2Y'].forEach(t => {
+                const btn = document.getElementById(`view-${t}`);
+                if(btn) {
+                    if (t === v) { btn.classList.add('bg-gray-200', 'dark:bg-tv-600', 'text-accent-500', 'dark:text-white'); btn.classList.remove('text-gray-500', 'dark:text-gray-400'); }
+                    else { btn.classList.remove('bg-gray-200', 'dark:bg-tv-600', 'text-accent-500', 'dark:text-white'); btn.classList.add('text-gray-500', 'dark:text-gray-400'); }
+                }
+            });
+            applyViewToChart();
+        }
+
+        // FUNGSI ZOOM DENGAN JARING KESELAMATAN (SAFETY NET)
+        function applyViewToChart() {
+            if(!chartInstance) return;
+            let dataRaw = bankDataCarta[currentSymbol];
+            if (!dataRaw || dataRaw.length === 0) return; // ELAK CRASH JIKA DATA BELUM DRAW
+
+            if(currentView === '2Y') {
+                chartInstance.timeScale().fitContent();
+            } else {
+                let latestDateStr = dataRaw[dataRaw.length - 1].time;
+                let latestDate = new Date(latestDateStr);
+                let fromDate = new Date(latestDate);
+
+                if (currentView === '6M') {
+                    fromDate.setMonth(fromDate.getMonth() - 6);
+                } else if (currentView === '1Y') {
+                    fromDate.setFullYear(fromDate.getFullYear() - 1);
+                }
+
+                let fromStr = fromDate.toISOString().split('T')[0];
+                let toStr = latestDateStr;
+
+                try {
+                    chartInstance.timeScale().setVisibleRange({
+                        from: fromStr,
+                        to: toStr
+                    });
+                } catch(e){}
+            }
+        }
+
+        async function bukaChart(simbol) {
             currentSymbol = simbol;
-            
             renderJadual();
 
             const item = globalData.find(d => d.symbol === simbol);
@@ -732,6 +787,16 @@
             histMACD = chartInstance.addHistogramSeries({ priceScaleId: 'left' });
 
             lineVolAvg = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false, priceScaleId: '', lineStyle: 0 });
+
+            // LAZY LOAD DATA DARI SUPABASE JIKA BELUM ADA
+            if (!bankDataCarta[simbol]) {
+                chartInstance.applyOptions({ watermark: { visible: true, text: 'LOADING CHART...', fontSize: 16, color: 'rgba(0,0,0,0.3)', horzAlign: 'center', vertAlign: 'center' }});
+                try {
+                    const { data, error } = await db.from('hasil_scan').select('chart_data').eq('symbol', simbol).single();
+                    if (data && data.chart_data) bankDataCarta[simbol] = data.chart_data;
+                } catch(e) {}
+                chartInstance.applyOptions({ watermark: { visible: false }});
+            }
 
             tukarTimeframe('1D');
         }
@@ -804,7 +869,7 @@
             }
 
             toggleIndicators(); 
-            chartInstance.timeScale().fitContent();
+            applyViewToChart();
         }
 
         function bukaTradingViewAdvanced() { if(!currentSymbol) return; window.open(`https://www.tradingview.com/chart/?symbol=MYX:${currentSymbol.replace('.KL', '')}`, '_blank'); }
