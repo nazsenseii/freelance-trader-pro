@@ -49,7 +49,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-tv-900 dark:text-gray-300 font-sans text-sm min-h-screen flex flex-col">
 
-    <!-- Responsive Navbar (Ditambah flex-wrap dan gap-3) -->
     <nav class="bg-white dark:bg-tv-800 border-b border-gray-300 dark:border-tv-700 flex flex-wrap justify-between items-center px-4 sm:px-6 py-3 shrink-0 shadow-sm transition-colors duration-300 z-40 gap-3">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-2">
@@ -60,7 +59,7 @@
         <div class="flex items-center gap-4 flex-wrap">
             <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono tracking-widest uppercase hidden sm:inline-block" id="lastUpdatedHeader">SYNCING...</span>
             <div class="flex items-center bg-gray-100 dark:bg-tv-900 p-1.5 rounded-sm border border-gray-200 dark:border-tv-700">
-                <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in mx-1">
+                <div class="relative inline-block w-8 align-middle select-none transition duration-200 mx-1">
                     <input type="checkbox" name="toggle" id="themeToggle" onchange="tukarTema()" class="toggle-checkbox absolute block w-4 h-4 rounded-sm bg-white border-2 appearance-none cursor-pointer z-10 transition-all duration-300 right-0 border-slate-400 dark:border-accent-500"/>
                     <label for="themeToggle" class="toggle-label block overflow-hidden h-4 rounded-sm bg-slate-400 dark:bg-accent-500 cursor-pointer transition-colors duration-300"></label>
                 </div>
@@ -72,44 +71,39 @@
     <div class="p-3 sm:p-4 flex-1 w-full max-w-[1900px] mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
             
-            <!-- PANEL KIRI (TABLE): Ketinggian responsif h-[600px] lg:h-[750px] -->
             <div class="lg:col-span-7 bg-white dark:bg-tv-800 rounded-sm border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 panel-widget flex flex-col h-[600px] lg:h-[750px] transition-colors duration-300">
                 
-                <!-- TABS: overflow-x-auto ditambah padding -->
                 <div class="flex space-x-4 sm:space-x-6 px-3 sm:px-4 pt-3 border-b border-gray-200 dark:border-tv-700 bg-gray-50 dark:bg-tv-800 overflow-x-auto text-[10px] sm:text-[11px] uppercase tracking-wider shrink-0 scrollbar-hide">
                     <button onclick="bukaTab('tabSemua')" id="btnTab-tabSemua" class="tab-btn pb-3 tab-active whitespace-nowrap">MARKETS</button>
                     <button onclick="bukaTab('tabGainers')" id="btnTab-tabGainers" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP GAINERS</button>
                     <button onclick="bukaTab('tabActive')" id="btnTab-tabActive" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP ACTIVE</button>
                     <button onclick="bukaTab('tabIndices')" id="btnTab-tabIndices" class="tab-btn pb-3 tab-inactive whitespace-nowrap">INDICES</button>
-                    <button onclick="bukaTab('tabWatchlist')" id="btnTab-tabWatchlist" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-mwarn flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg> WATCHLIST
-                    </button>
+                    <button onclick="bukaTab('tabWatchlist')" id="btnTab-tabWatchlist" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-mwarn flex items-center gap-1">WATCHLIST</button>
                     <button onclick="bukaTab('tabScanner')" id="btnTab-tabScanner" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-accent-500">SCANNER</button>
                 </div>
 
                 <div id="panelScanner" class="hidden p-3 sm:p-4 bg-gray-100 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 shrink-0">
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-xs font-mono">
                         <div>
-                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM PRICE (RM)</label>
-                            <input type="number" id="scanMinP" value="0.10" step="0.05" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                            <label class="block text-gray-500 font-sans font-bold mb-1 uppercase text-[10px]">MIN PRICE</label>
+                            <input type="number" id="scanMinP" value="0.01" step="0.01" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
-                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MAXIMUM PRICE (RM)</label>
-                            <input type="number" id="scanMaxP" value="10.00" step="0.10" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                            <label class="block text-gray-500 font-sans font-bold mb-1 uppercase text-[10px]">MAX PRICE</label>
+                            <input type="number" id="scanMaxP" value="10.00" step="0.10" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
-                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM VOLUME</label>
+                            <label class="block text-gray-500 font-sans font-bold mb-1 uppercase text-[10px]">MIN VOL</label>
                             <input type="number" id="scanMinVol" value="2000" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
-                            <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">SIGNAL FILTER</label>
+                            <label class="block text-gray-500 font-sans font-bold mb-1 uppercase text-[10px]">SIGNAL</label>
                             <select id="scanSignal" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 font-sans font-semibold focus:border-accent-500">
                                 <option value="ALL">ALL SIGNALS</option>
                                 <option value="STRONG BUY">STRONG BUY</option>
                                 <option value="MONITOR CLOSELY">MONITOR CLOSELY</option>
                                 <option value="PULLBACK">PULLBACK</option>
                                 <option value="NEUTRAL">NEUTRAL</option>
-                                <option value="AVOID">AVOID</option>
                             </select>
                         </div>
                         <div class="col-span-2 md:col-span-1">
@@ -118,27 +112,22 @@
                     </div>
                 </div>
 
-                <!-- CARIAN: Responsive padding dan width -->
                 <div class="px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-tv-700 flex flex-wrap justify-between items-center bg-gray-100 dark:bg-tv-900/80 gap-3 shrink-0">
                     <span class="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap" id="tajukJadual">MARKETS</span>
-                    
                     <div class="flex-1 w-full min-w-[150px] max-w-sm relative">
                         <svg class="w-3.5 h-3.5 search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         <input type="text" id="carianKaunter" onkeyup="renderJadual()" placeholder="Search Ticker / Name..." class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm pl-8 pr-3 py-1 outline-none text-xs text-slate-800 dark:text-gray-200 focus:border-accent-500 font-mono transition shadow-sm">
                     </div>
-
                     <span class="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-mono bg-gray-200 dark:bg-tv-700 px-2 py-0.5 rounded-sm whitespace-nowrap" id="kiraanKaunter">0 MATCHES</span>
                 </div>
 
-                <!-- TABLE WRAPPER: Tambah overflow-x-auto supaya responsif di mobile -->
                 <div id="panelTable" class="flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-tv-800 w-full">
-                    <table class="w-full text-left relative min-w-[800px]"> <!-- Tambah min-w supaya jadual maintain struktur -->
+                    <table class="w-full text-left relative min-w-[850px]">
                         <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
                             <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest select-none">
                                 <th class="px-3 py-2 w-10 text-center">★</th>
                                 <th class="px-3 py-2 sortable whitespace-nowrap" onclick="setSort('symbol')">TICKER ↕️</th>
-                                <th class="px-3 py-2 whitespace-nowrap">NAME</th>
-                                <th class="px-3 py-2 whitespace-nowrap">SECTOR</th>
+                                <th class="px-3 py-2 text-center sortable whitespace-nowrap" onclick="setSort('rating')">RATING ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('price')">PRICE ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('change')">CHANGE ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('volume')">VOLUME ↕️</th>
@@ -147,20 +136,19 @@
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
-                            <tr><td colspan="9" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">CONNECTING TO SERVER...</td></tr>
+                            <tr><td colspan="8" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">CONNECTING TO SERVER...</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- INDICES WRAPPER: Tambah overflow-x-auto -->
                 <div id="panelIndices" class="hidden flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-tv-800 w-full">
                     <table class="w-full text-left min-w-[400px]">
                         <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
                             <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                 <th class="px-3 py-2">INDEX</th>
                                 <th class="px-3 py-2 text-right">VALUE</th>
-                                <th class="px-3 py-2 text-right whitespace-nowrap">CHANGE</th>
-                                <th class="px-3 py-2 text-right whitespace-nowrap">CHANGE (%)</th>
+                                <th class="px-3 py-2 text-right">CHANGE</th>
+                                <th class="px-3 py-2 text-right">CHANGE (%)</th>
                             </tr>
                         </thead>
                         <tbody id="indicesBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
@@ -170,7 +158,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: CHART - Ketinggian responsif h-[500px] lg:h-[750px] -->
+            <!-- RIGHT PANEL: CHART -->
             <div class="lg:col-span-5 bg-white dark:bg-tv-800 border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 rounded-sm panel-widget flex flex-col h-[500px] lg:h-[750px] overflow-hidden">
                 
                 <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 dark:bg-tv-900 flex-wrap gap-3 shrink-0">
@@ -179,14 +167,12 @@
                             <h3 class="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200 tracking-widest uppercase">TECHNICAL CHART</h3>
                             <span id="chartSubtitle" class="text-base sm:text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[250px] sm:max-w-[300px] block">WAITING DATA...</span>
                         </div>
-                        
                         <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono mt-1">
                             <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-2 sm:px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
                             <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
                             <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
                         </div>
                     </div>
-
                     <div class="flex gap-2 font-mono mt-1 w-full sm:w-auto justify-end">
                         <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">Trading View</button>
                         <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">KLSE Screener</button>
@@ -205,7 +191,7 @@
                             <input type="checkbox" id="toggleIchi" onchange="toggleIndicators()" class="accent-mbuy w-3 h-3"> ICHIMOKU
                         </label>
                         <label class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-500 cursor-pointer hover:text-blue-400 select-none border-l pl-3 border-gray-300 dark:border-tv-600 whitespace-nowrap">
-                            <input type="checkbox" id="toggleBB" onchange="toggleIndicators()" class="accent-blue-400 w-3 h-3"> BOLLINGER BANDS
+                            <input type="checkbox" id="toggleBB" onchange="toggleIndicators()" class="accent-blue-400 w-3 h-3"> BOLLINGER (20,1)
                         </label>
                     </div>
                 </div>
@@ -213,14 +199,13 @@
                 <div id="chartError" class="text-center text-msell p-4 hidden text-[10px] sm:text-xs uppercase tracking-widest font-mono"></div>
                 <div id="tvChartContainer" class="flex-1 w-full relative overflow-hidden"></div>
             </div>
-
         </div>
     </div>
 
-    <!-- MODAL FA: Tambah max-h-[90vh] supaya responsif di skrin kecil -->
+    <!-- MODAL FA -->
     <div id="faModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-tv-800 w-full max-w-lg rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content flex flex-col max-h-[90vh]">
-            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0">
+            <div id="faModalHeader" class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0 transition-colors">
                 <h3 class="font-bold text-xs sm:text-sm uppercase tracking-widest text-slate-800 dark:text-white">
                     FUNDAMENTAL : <span id="faSymbol" class="text-accent-500"></span>
                 </h3>
@@ -270,7 +255,7 @@
         </div>
     </div>
 
-    <!-- MODAL SIGNAL: Tambah overflow supaya boleh scroll dalam popup -->
+    <!-- MODAL SIGNAL -->
     <div id="signalModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-tv-800 w-full max-w-md rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content flex flex-col max-h-[90vh]">
             <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0">
@@ -286,15 +271,29 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mbHppd3Vqcmd1bWZ1dWd2eHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxMzEzOTEsImV4cCI6MjEwNzcwNzM5MX0.vkCQ0HyKNDTwVm9UESYXZcQYjYS4ePJW1Vgoj0s3fQ4';
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let globalData = []; let bankDataCarta = {}; 
+        let globalData = []; 
+        let bankDataCarta = {}; 
         let watchlist = []; 
         
-        let currentTab = 'tabSemua'; let chartInstance = null; let candleSeries = null; let volumeSeries = null; 
-        let lineEMA50 = null; let lineSpanA = null; let lineSpanB = null; let lineHigh20 = null; let lineLow20 = null;
-        let lineBBUp = null; let lineBBDown = null; let lineMACD = null; let lineSignalMACD = null; let histMACD = null;
+        let currentTab = 'tabSemua'; 
+        let chartInstance = null; 
+        let candleSeries = null; 
+        let volumeSeries = null; 
+        let lineEMA50 = null; 
+        let lineSpanA = null; 
+        let lineSpanB = null; 
+        let lineHigh20 = null; 
+        let lineLow20 = null;
+        let lineBBUp = null; 
+        let lineBBDown = null; 
+        let lineMACD = null; 
+        let lineSignalMACD = null; 
+        let histMACD = null;
         let lineVolAvg = null; 
         
-        let currentSymbol = ''; let currentSortCol = 'signal'; let isAscending = false;
+        let currentSymbol = ''; 
+        let currentSortCol = 'signal'; 
+        let isAscending = false;
         let chartResizeObserver = null; 
 
         function tukarTema() {
@@ -348,10 +347,18 @@
         }
         function formatBillion(num) { return (!num || isNaN(num)) ? '-' : (parseFloat(num)/1e9).toFixed(2) + 'B'; }
 
+        // MENGEMBALIKAN FUNGSI INDEKS YANG HILANG
         async function tarikSemuaIndeks() {
             const indBody = document.getElementById('indicesBody'); if(!indBody) return;
-            indBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">FETCHING...</td></tr>`;
-            const listIndeks = [ {sym: '^KLSE', name: 'KLCI'}, {sym: '^KLPT', name: 'PROPERTY'}, {sym: '^KLTCS', name: 'TECHNOLOGY'}, {sym: '^KLFIN', name: 'FINANCIAL'}, {sym: '^KLHC', name: 'HEALTHCARE'}, {sym: '^KLEAS', name: 'ENERGY'}, {sym: '^KLCS', name: 'CONSUMER'}, {sym: '^KLPRO', name: 'INDUSTRIAL'}, {sym: '^KLPL', name: 'PLANTATION'}, {sym: '^KLCN', name: 'CONSTRUCTION'} ];
+            indBody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400 uppercase tracking-widest font-sans animate-pulse">FETCHING DATA...</td></tr>`;
+            
+            const listIndeks = [ 
+                {sym: '^KLSE', name: 'KLCI'}, {sym: '^KLPT', name: 'PROPERTY'}, {sym: '^KLTCS', name: 'TECHNOLOGY'}, 
+                {sym: '^KLFIN', name: 'FINANCIAL'}, {sym: '^KLHC', name: 'HEALTHCARE'}, {sym: '^KLEAS', name: 'ENERGY'}, 
+                {sym: '^KLCS', name: 'CONSUMER'}, {sym: '^KLPRO', name: 'INDUSTRIAL'}, {sym: '^KLPL', name: 'PLANTATION'}, 
+                {sym: '^KLCN', name: 'CONSTRUCTION'} 
+            ];
+
             try {
                 let htmlStr = '';
                 for(let item of listIndeks) {
@@ -377,15 +384,17 @@
 
         async function muatTurunData() {
             try { tarikSemuaIndeks(); } catch(e){}
-            const tbody = document.getElementById('tableBody'); if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-400 font-bold uppercase tracking-widest font-sans animate-pulse">SYNCING DATA...</td></tr>`;
+            const tbody = document.getElementById('tableBody'); if(tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-400 font-bold uppercase tracking-widest font-sans animate-pulse">SYNCING DATA...</td></tr>`;
             try {
                 const { data: wlData, error: wlError } = await db.from('watchlist').select('symbol');
                 if (wlData) watchlist = wlData.map(d => d.symbol);
 
-                const { data, error } = await db.from('hasil_scan').select('*').order('price', { ascending: false });
+                // LAZY LOAD: Tarik senarai tanpa 'chart_data' untuk selamatkan RAM telefon
+                const { data, error } = await db.from('hasil_scan').select('symbol, name, price, signal, sector, change, change_pct, volume, fa_data, created_at').order('price', { ascending: false });
                 if (error) throw error;
-                if (!data || data.length === 0) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-mwarn font-sans">NO DATA. RUN SCANNER.</td></tr>`; return; }
-                globalData = data; data.forEach(item => { if(item.chart_data) bankDataCarta[item.symbol] = item.chart_data; });
+                if (!data || data.length === 0) { if(tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-mwarn font-sans">NO DATA. RUN SCANNER.</td></tr>`; return; }
+                
+                globalData = data; 
                 const elHeader = document.getElementById('lastUpdatedHeader');
                 if (data[0] && data[0].created_at && elHeader) { elHeader.innerText = `UPDATED: ${new Date(data[0].created_at).toLocaleString('en-US')}`; }
                 
@@ -394,18 +403,38 @@
                 if(!currentSymbol && globalData.length > 0) {
                     bukaChart(globalData[0].symbol);
                 }
-            } catch (err) { if(tbody) tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-msell font-bold font-sans">CONNECTION FAILED</td></tr>`; }
+            } catch (err) { if(tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-msell font-bold font-sans">CONNECTION FAILED</td></tr>`; }
         }
 
         function getSignalBadge(signal) {
             let sColor = 'text-gray-500 dark:text-gray-500 border-gray-300 dark:border-tv-600 bg-gray-100 dark:bg-tv-800'; let sLabel = 'NEUTRAL'; let sRank = 2;
             if(signal) {
-                if(signal.includes('STRONG BUY')) { sColor = 'text-mbuy border-mbuy/40 bg-mbuy/10'; sLabel = 'STRONG BUY'; sRank = 5; }
-                else if(signal.includes('MONITOR')) { sColor = 'text-accent-500 border-accent-500/40 bg-accent-500/10'; sLabel = 'MONITOR'; sRank = 4; }
-                else if(signal.includes('PULLBACK')) { sColor = 'text-mwarn border-mwarn/40 bg-mwarn/10'; sLabel = 'PULLBACK'; sRank = 3; }
+                if(signal.includes('STRONG BUY')) { sColor = 'text-mbuy border-mbuy/40 bg-mbuy/10'; sLabel = 'STRONG BUY'; sRank = 6; }
+                else if(signal.includes('MONITOR')) { sColor = 'text-accent-500 border-accent-500/40 bg-accent-500/10'; sLabel = 'MONITOR'; sRank = 5; }
+                else if(signal.includes('PULLBACK')) { sColor = 'text-mwarn border-mwarn/40 bg-mwarn/10'; sLabel = 'PULLBACK'; sRank = 4; }
+                else if(signal.includes('NEW')) { sColor = 'text-purple-500 border-purple-500/40 bg-purple-500/10'; sLabel = 'NEW IPO'; sRank = 3; }
                 else if(signal.includes('AVOID')) { sColor = 'text-msell border-msell/40 bg-msell/10'; sLabel = 'AVOID'; sRank = 1; }
             }
             return { color: sColor, label: sLabel, rank: sRank };
+        }
+
+        function getRatingHtml(fa) {
+            if (fa.is_warrant) return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm border bg-blue-100 text-blue-600 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">WARAN 🏷️</span>`;
+            if (fa.is_ipo) return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm border bg-purple-100 text-purple-600 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">IPO 🆕</span>`;
+            
+            let rate = fa.total_rating || 0;
+            let hue = (rate / 10) * 120; // 0 = Merah, 120 = Hijau
+            let bgLightness = 50 - (rate / 10) * 20; // Supaya 10/10 jadi Hijau Gelap (30% Lightness)
+            
+            return `<span class="px-2 py-0.5 text-[11px] font-bold tracking-widest rounded-sm shadow-sm text-white" style="background-color: hsl(${hue}, 85%, ${bgLightness}%); border: 1px solid hsl(${hue}, 85%, ${bgLightness - 10}%); text-shadow: 0px 1px 2px rgba(0,0,0,0.6);">${rate}/10 ★</span>`;
+        }
+
+        function getFaButtonClass(fa) {
+            if (fa.is_warrant || fa.is_ipo) return "bg-gray-100 text-gray-500 border-gray-300 dark:bg-tv-700 dark:text-gray-400 dark:border-tv-600";
+            let fScore = fa.fa_score || 0;
+            if (fScore >= 3) return "bg-mbuy/10 text-mbuy border-mbuy/40 hover:bg-mbuy hover:text-white"; 
+            if (fScore >= 1) return "bg-mwarn/10 text-mwarn border-mwarn/40 hover:bg-mwarn hover:text-white"; 
+            return "bg-msell/10 text-msell border-msell/40 hover:bg-msell hover:text-white"; 
         }
 
         function renderJadual() {
@@ -441,25 +470,34 @@
                     });
                 }
                 dataPaparan.sort((a, b) => {
+                    let faA = typeof a.fa_data === 'string' ? JSON.parse(a.fa_data) : (a.fa_data || {});
+                    let faB = typeof b.fa_data === 'string' ? JSON.parse(b.fa_data) : (b.fa_data || {});
                     let valA, valB;
+                    
                     if (currentSortCol === 'price') { valA = a.price; valB = b.price; }
                     else if (currentSortCol === 'change') { valA = a.change_pct; valB = b.change_pct; }
                     else if (currentSortCol === 'volume') { valA = a.volume; valB = b.volume; }
                     else if (currentSortCol === 'signal') { valA = getSignalBadge(a.signal).rank; valB = getSignalBadge(b.signal).rank; }
+                    else if (currentSortCol === 'rating') { 
+                        valA = (faA.is_warrant || faA.is_ipo) ? -1 : (faA.total_rating || 0); 
+                        valB = (faB.is_warrant || faB.is_ipo) ? -1 : (faB.total_rating || 0); 
+                    }
                     else { valA = a.symbol; valB = b.symbol; }
+                    
                     if(valA < valB) return isAscending ? -1 : 1; if(valA > valB) return isAscending ? 1 : -1; return 0;
                 });
             }
 
             document.getElementById('kiraanKaunter').innerText = `${dataPaparan.length} MATCHES`;
-            if (dataPaparan.length === 0) { tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-gray-500 font-sans">NO MATCHES FOUND.</td></tr>`; return; }
+            if (dataPaparan.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-500 font-sans">NO MATCHES FOUND.</td></tr>`; return; }
 
             dataPaparan.forEach(item => {
                 const isWl = watchlist.includes(item.symbol); const chgPct = item.change_pct || 0; const chg = item.change || 0;
                 let colorChg = 'text-gray-500 dark:text-gray-400'; let sign = '';
                 if (chgPct > 0) { colorChg = 'text-mbuy'; sign = '+'; } else if (chgPct < 0) { colorChg = 'text-msell'; }
                 let lots = Math.floor((item.volume || 0) / 100); const badge = getSignalBadge(item.signal);
-                let compName = ''; try { let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {}; compName = item.name || fa.shortName || ''; } catch(e){}
+                let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {}; 
+                let compName = item.name || fa.shortName || ''; 
 
                 const svgStarFilled = `<svg class="w-4 h-4 mx-auto text-accent-500 star-svg" fill="currentColor" viewBox="0 0 24 24"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>`;
                 const svgStarOutline = `<svg class="w-4 h-4 mx-auto text-gray-300 dark:text-tv-600 hover:text-accent-500 transition star-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>`;
@@ -473,9 +511,11 @@
                         <td class="px-3 py-2 text-center align-middle cursor-pointer hover:bg-gray-200 dark:hover:bg-tv-700 transition" onclick="event.stopPropagation(); toggleWatchlist('${item.symbol}')">${isWl ? svgStarFilled : svgStarOutline}</td>
                         <td class="px-3 py-2 align-middle">
                             <div class="font-bold text-slate-800 dark:text-white text-sm font-sans">${item.symbol.replace('.KL', '')}</div>
+                            <div class="text-[9px] text-gray-500 font-sans max-w-[130px] truncate">${compName}</div>
                         </td>
-                        <td class="px-3 py-2 align-middle"><div class="text-[11px] font-bold text-gray-600 dark:text-gray-300 font-sans max-w-[130px] whitespace-normal leading-tight">${compName}</div></td>
-                        <td class="px-3 py-2 align-middle"><div class="text-[9px] text-gray-500 font-sans tracking-widest uppercase whitespace-normal break-words max-w-[80px] leading-tight">${item.sector || '-'}</div></td>
+                        <td class="px-3 py-2 align-middle text-center font-sans">
+                            ${getRatingHtml(fa)}
+                        </td>
                         <td class="px-3 py-2 align-middle text-right"><div class="font-bold text-gray-800 dark:text-gray-100 text-sm">${Number(item.price || 0).toFixed(3)}</div></td>
                         <td class="px-3 py-2 align-middle text-right">
                             <div class="font-bold ${colorChg} text-sm">${sign}${chg.toFixed(3)}</div>
@@ -486,7 +526,7 @@
                             <span class="px-2 py-0.5 text-[9px] font-bold tracking-wider rounded border cursor-pointer hover:opacity-80 transition ${badge.color}" onclick="event.stopPropagation(); bukaSignalInfo('${item.symbol}')">${badge.label.replace('CLOSELY', '')}</span>
                         </td>
                         <td class="px-3 py-2 align-middle text-center font-sans">
-                            <button onclick="event.stopPropagation(); bukaFA('${item.symbol}')" class="text-gray-500 hover:text-accent-500 text-[10px] px-2 py-1 font-bold border border-gray-300 dark:border-tv-600 rounded-sm transition bg-white dark:bg-tv-800">FUNDAMENTAL</button>
+                            <button onclick="event.stopPropagation(); bukaFA('${item.symbol}')" class="text-[10px] px-2 py-1 font-bold border rounded-sm transition ${getFaButtonClass(fa)}">FUNDAMENTAL</button>
                         </td>
                     </tr>
                 `;
@@ -503,13 +543,16 @@
 
             if (item.signal.includes('STRONG BUY')) {
                 content = `<div class="p-3 bg-mbuy/10 border-l-2 border-mbuy text-mbuy mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: STRONG BUY (BREAKOUT)<br/><span class="text-[10px] font-normal">Turtle + BB Breakout detected.</span></div>
-                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Price (${price}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">BOLLINGER:</span> Broke upper band (${bbUp}).</li><li><span class="text-gray-800 dark:text-gray-200">RESISTANCE:</span> Passed 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> ${volRatio}% of 20-day avg.</li></ul>`;
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Price (${price}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">BOLLINGER (20,1):</span> Broke upper band (${bbUp}).</li><li><span class="text-gray-800 dark:text-gray-200">RESISTANCE:</span> Passed 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> ${volRatio}% of 20-day avg.</li></ul>`;
             } else if (item.signal.includes('MONITOR')) {
                 content = `<div class="p-3 bg-accent-500/10 border-l-2 border-accent-500 text-accent-500 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: MONITOR CLOSELY (VCP)<br/><span class="text-[10px] font-normal">Potential setup building.</span></div>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> EMA20 (${ema20}) > EMA50 (${ema50}).</li><li><span class="text-gray-800 dark:text-gray-200">PRICE ACTION:</span> Resting near 20-Day High (${h20}).</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> Drying up (${volRatio}% of avg).</li></ul>`;
             } else if (item.signal.includes('PULLBACK')) {
                 content = `<div class="p-3 bg-mwarn/10 border-l-2 border-mwarn text-mwarn mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: PULLBACK (DIP)<br/><span class="text-[10px] font-normal">Healthy correction in progress.</span></div>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">TREND:</span> Near EMA20 (${ema20}) / EMA50 (${ema50}) support.</li><li><span class="text-gray-800 dark:text-gray-200">VOLUME:</span> Low selling pressure (${volRatio}% of avg).</li></ul>`;
+            } else if (item.signal.includes('NEW')) {
+                content = `<div class="p-3 bg-purple-500/10 border-l-2 border-purple-500 text-purple-500 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: NEW IPO / WARRANT<br/><span class="text-[10px] font-normal">Not enough data for EMA50.</span></div>
+                    <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">PRICE:</span> ${price}.</li><li><span class="text-gray-800 dark:text-gray-200">WARNING:</span> Trade with caution, high volatility.</li></ul>`;
             } else {
                 content = `<div class="p-3 bg-gray-200 dark:bg-tv-700 border-l-2 border-gray-400 text-gray-700 dark:text-gray-300 mb-4 font-sans font-bold text-xs uppercase tracking-wider">STATUS: NEUTRAL / AVOID<br/><span class="text-[10px] font-normal">Sideways or downtrend.</span></div>
                     <ul class="list-disc pl-5 space-y-2 text-sm text-gray-600 dark:text-gray-400"><li><span class="text-gray-800 dark:text-gray-200">PRICE:</span> ${price}.</li><li><span class="text-gray-800 dark:text-gray-200">TREND MA50:</span> ${ema50}.</li></ul>`;
@@ -520,25 +563,35 @@
 
         function bukaFA(simbol) {
             const item = globalData.find(d => d.symbol === simbol); if (!item) return;
-            document.getElementById('faSymbol').innerText = simbol.replace('.KL', ''); document.getElementById('faSector').innerText = item.sector || 'N/A';
-            let pe = '-', pb = '-', eps = '-', shares = '-', float = '-', div = '-', cap = '-', netInc = '-', debt = '-', roe = '-';
-            if (item.fa_data) {
-                let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data;
-                if(fa.pe_ratio) pe = parseFloat(fa.pe_ratio).toFixed(2); if(fa.pb_ratio) pb = parseFloat(fa.pb_ratio).toFixed(2);
-                if(fa.eps) eps = parseFloat(fa.eps).toFixed(3); if(fa.div_yield) div = (parseFloat(fa.div_yield) * 100).toFixed(2) + '%';
-                if(fa.roe) roe = (parseFloat(fa.roe) * 100).toFixed(2) + '%';
-                cap = formatNomborPendek(fa.market_cap); shares = formatBillion(fa.shares_out); float = formatNomborPendek(fa.float_shares);
-                netInc = formatNomborPendek(fa.net_income); debt = formatNomborPendek(fa.total_debt);
-            }
-            document.getElementById('faPE').innerText = pe; document.getElementById('faPB').innerText = pb; document.getElementById('faEPS').innerText = eps;
-            document.getElementById('faDiv').innerText = div; document.getElementById('faCap').innerText = cap; document.getElementById('faShares').innerText = shares;
-            document.getElementById('faFloat').innerText = float; document.getElementById('faNetInc').innerText = netInc; document.getElementById('faDebt').innerText = debt;
-            const roeEl = document.getElementById('faROE'); roeEl.innerText = roe; roeEl.className = "font-bold text-sm"; 
-            if (roe !== '-' && !roe.includes('-')) roeEl.classList.add('text-mbuy'); else if (roe.includes('-')) roeEl.classList.add('text-msell');
+            let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {};
+            
+            document.getElementById('faModalHeader').className = `px-5 py-4 border-b flex justify-between items-center shrink-0 transition-colors ${
+                fa.is_warrant || fa.is_ipo ? 'bg-gray-100 dark:bg-tv-700 border-gray-300 dark:border-tv-600' : 
+                (fa.fa_score >= 3 ? 'bg-mbuy/10 border-mbuy/40' : (fa.fa_score >= 1 ? 'bg-mwarn/10 border-mwarn/40' : 'bg-msell/10 border-msell/40'))
+            }`;
+
+            document.getElementById('faSymbol').innerText = simbol.replace('.KL', '') + (fa.is_warrant ? ' (WARAN)' : (fa.is_ipo ? ' (IPO)' : ''));
+            document.getElementById('faSector').innerText = item.sector || 'N/A';
+            
+            document.getElementById('faPE').innerText = fa.pe_ratio ? parseFloat(fa.pe_ratio).toFixed(2) : '-';
+            document.getElementById('faPB').innerText = fa.pb_ratio ? parseFloat(fa.pb_ratio).toFixed(2) : '-';
+            document.getElementById('faEPS').innerText = fa.eps ? parseFloat(fa.eps).toFixed(3) : '-';
+            document.getElementById('faDiv').innerText = fa.div_yield ? (parseFloat(fa.div_yield) * 100).toFixed(2) + '%' : '-';
+            document.getElementById('faCap').innerText = formatNomborPendek(fa.market_cap);
+            document.getElementById('faShares').innerText = formatBillion(fa.shares_out);
+            document.getElementById('faNetInc').innerText = formatNomborPendek(fa.net_income);
+            document.getElementById('faDebt').innerText = formatNomborPendek(fa.total_debt);
+            document.getElementById('faFloat').innerText = formatNomborPendek(fa.float_shares);
+            
+            let roe = fa.roe ? (parseFloat(fa.roe) * 100).toFixed(2) + '%' : '-';
+            const roeEl = document.getElementById('faROE'); roeEl.innerText = roe; 
+            roeEl.className = "font-bold " + (roe.includes('-') ? "text-msell" : (roe !== '-' ? "text-mbuy" : ""));
+            
             document.getElementById('faModal').classList.add('show');
         }
         function tutupFA() { document.getElementById('faModal').classList.remove('show'); }
 
+        // MENGEMBALIKAN PENGIRAAN INDIKATOR MACD DAN ICHIMOKU
         function kiraIndikator(dataCarta) {
             let ema50Data=[], spanAData=[], spanBData=[], turtleUpData=[], turtleDownData=[];
             let bbUpData=[], bbDownData=[], macdLineData=[], macdSigData=[], macdHistData=[];
@@ -582,8 +635,8 @@
                     let sum = slice.reduce((a,b)=>a+b.close, 0); let sma20 = sum/20;
                     let sqSum = slice.reduce((a,b)=>a + Math.pow(b.close - sma20, 2), 0);
                     let stdDev = Math.sqrt(sqSum / 20);
-                    bbUpData.push({ time: dataCarta[i].time, value: sma20 + 2*stdDev });
-                    bbDownData.push({ time: dataCarta[i].time, value: sma20 - 2*stdDev });
+                    bbUpData.push({ time: dataCarta[i].time, value: sma20 + stdDev });
+                    bbDownData.push({ time: dataCarta[i].time, value: sma20 - stdDev });
                 }
 
                 let tenkan = null, kijun = null, sB = null;
@@ -609,42 +662,32 @@
             lineBBUp.applyOptions({ visible: bbVis }); lineBBDown.applyOptions({ visible: bbVis });
         }
 
-        function bukaChart(simbol) {
-            currentSymbol = simbol;
-            
+        async function bukaChart(simbol) {
+            currentSymbol = simbol; 
             renderJadual();
 
             const item = globalData.find(d => d.symbol === simbol);
-            let compName = '';
+            let compName = ''; 
             if(item) { try { let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data; compName = item.name || fa?.shortName || ''; } catch(e){} }
             document.getElementById('chartSubtitle').innerText = `${simbol.replace('.KL','')} | ${compName}`;
             
-            const container = document.getElementById('tvChartContainer'); 
-            container.innerHTML = ''; 
-            
+            const container = document.getElementById('tvChartContainer'); container.innerHTML = ''; 
             chartInstance = LightweightCharts.createChart(container, {
-                width: container.clientWidth, 
-                height: container.clientHeight || 500,
+                width: container.clientWidth, height: container.clientHeight || 500,
                 layout: { backgroundColor: '#ffffff', textColor: '#475569', fontFamily: 'JetBrains Mono' },
                 grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(0, 0, 0, 0.05)' } },
-                timeScale: { borderColor: '#e2e8f0' }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
                 rightPriceScale: { scaleMargins: { top: 0.05, bottom: 0.35 } },
                 leftPriceScale: { visible: false, scaleMargins: { top: 0.8, bottom: 0 } }
             });
 
-            if(chartResizeObserver) { chartResizeObserver.disconnect(); }
-            chartResizeObserver = new ResizeObserver(entries => {
-                if(entries.length === 0 || entries[0].target !== container) return;
-                const newRect = entries[0].contentRect;
-                chartInstance.applyOptions({ width: newRect.width, height: newRect.height });
-            });
+            if(chartResizeObserver) chartResizeObserver.disconnect();
+            chartResizeObserver = new ResizeObserver(e => { if(e.length > 0) chartInstance.applyOptions({ width: e[0].contentRect.width, height: e[0].contentRect.height }); });
             chartResizeObserver.observe(container);
 
             candleSeries = chartInstance.addCandlestickSeries({ upColor: '#089981', downColor: '#F23645', borderVisible: false, wickUpColor: '#089981', wickDownColor: '#F23645' });
-            
             volumeSeries = chartInstance.addHistogramSeries({ color: 'rgba(41, 98, 255, 0.5)', priceFormat: { type: 'volume' }, priceScaleId: '' });
             chartInstance.priceScale('').applyOptions({ scaleMargins: { top: 0.65, bottom: 0.20 } });
-
             chartInstance.priceScale('macd').applyOptions({ scaleMargins: { top: 0.85, bottom: 0 } });
 
             lineEMA50 = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 2, crosshairMarkerVisible: false, visible: false }); 
@@ -658,8 +701,17 @@
             lineMACD = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, priceScaleId: 'left', crosshairMarkerVisible: false });
             lineSignalMACD = chartInstance.addLineSeries({ color: '#FF9800', lineWidth: 1, priceScaleId: 'left', crosshairMarkerVisible: false });
             histMACD = chartInstance.addHistogramSeries({ priceScaleId: 'left' });
-
             lineVolAvg = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false, priceScaleId: '', lineStyle: 0 });
+
+            // FUNGSI LAZY LOAD UNTUK ELAK CRASH PHONE
+            if (!bankDataCarta[simbol]) {
+                chartInstance.applyOptions({ watermark: { visible: true, text: 'LOADING CHART...', fontSize: 16, color: 'rgba(0,0,0,0.3)', horzAlign: 'center', vertAlign: 'center' }});
+                try {
+                    const { data, error } = await db.from('hasil_scan').select('chart_data').eq('symbol', simbol).single();
+                    if (data && data.chart_data) bankDataCarta[simbol] = data.chart_data;
+                } catch(e) { console.error('Gagal tarik chart', e); }
+                chartInstance.applyOptions({ watermark: { visible: false }});
+            }
 
             tukarTimeframe('1D');
         }
@@ -731,12 +783,11 @@
                 lineVolAvg.setData([]);
             }
 
-            toggleIndicators(); 
-            chartInstance.timeScale().fitContent();
+            toggleIndicators(); chartInstance.timeScale().fitContent();
         }
 
-        function bukaTradingViewAdvanced() { if(!currentSymbol) return; window.open(`https://www.tradingview.com/chart/?symbol=MYX:${currentSymbol.replace('.KL', '')}`, '_blank'); }
-        function bukaKLSEScreener() { if(!currentSymbol) return; window.open(`https://www.klsescreener.com/v2/stocks/view/${currentSymbol.replace('.KL', '')}`, '_blank'); }
+        function bukaTradingViewAdvanced() { if(currentSymbol) window.open(`https://www.tradingview.com/chart/?symbol=MYX:${currentSymbol.replace('.KL', '')}`, '_blank'); }
+        function bukaKLSEScreener() { if(currentSymbol) window.open(`https://www.klsescreener.com/v2/stocks/view/${currentSymbol.replace('.KL', '')}`, '_blank'); }
 
         window.onload = muatTurunData;
     </script>
