@@ -49,31 +49,34 @@
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-tv-900 dark:text-gray-300 font-sans text-sm min-h-screen flex flex-col">
 
-    <nav class="bg-white dark:bg-tv-800 border-b border-gray-300 dark:border-tv-700 flex justify-between items-center px-6 py-3 shrink-0 shadow-sm transition-colors duration-300 z-40">
+    <!-- Responsive Navbar (Ditambah flex-wrap dan gap-3) -->
+    <nav class="bg-white dark:bg-tv-800 border-b border-gray-300 dark:border-tv-700 flex flex-wrap justify-between items-center px-4 sm:px-6 py-3 shrink-0 shadow-sm transition-colors duration-300 z-40 gap-3">
         <div class="flex items-center gap-6">
             <div class="flex items-center gap-2">
                 <div class="w-2 h-6 bg-accent-500 rounded-sm"></div>
-                <h1 class="text-xl font-black tracking-widest text-slate-800 dark:text-white uppercase">Freelance Trader <span class="text-accent-500">Pro</span></h1>
+                <h1 class="text-lg sm:text-xl font-black tracking-widest text-slate-800 dark:text-white uppercase">Freelance Trader <span class="text-accent-500">Pro</span></h1>
             </div>
         </div>
-        <div class="flex items-center gap-6">
-            <span class="text-[11px] text-gray-500 font-mono tracking-widest uppercase" id="lastUpdatedHeader">SYNCING...</span>
+        <div class="flex items-center gap-4 flex-wrap">
+            <span class="text-[10px] sm:text-[11px] text-gray-500 font-mono tracking-widest uppercase hidden sm:inline-block" id="lastUpdatedHeader">SYNCING...</span>
             <div class="flex items-center bg-gray-100 dark:bg-tv-900 p-1.5 rounded-sm border border-gray-200 dark:border-tv-700">
                 <div class="relative inline-block w-8 align-middle select-none transition duration-200 ease-in mx-1">
                     <input type="checkbox" name="toggle" id="themeToggle" onchange="tukarTema()" class="toggle-checkbox absolute block w-4 h-4 rounded-sm bg-white border-2 appearance-none cursor-pointer z-10 transition-all duration-300 right-0 border-slate-400 dark:border-accent-500"/>
                     <label for="themeToggle" class="toggle-label block overflow-hidden h-4 rounded-sm bg-slate-400 dark:bg-accent-500 cursor-pointer transition-colors duration-300"></label>
                 </div>
             </div>
-            <button onclick="muatTurunData()" class="bg-accent-500 hover:bg-accent-400 text-white text-[11px] uppercase font-bold tracking-wider px-5 py-2 rounded-sm transition shadow">SYNC DATA</button>
+            <button onclick="muatTurunData()" class="bg-accent-500 hover:bg-accent-400 text-white text-[10px] sm:text-[11px] uppercase font-bold tracking-wider px-3 sm:px-5 py-2 rounded-sm transition shadow">SYNC DATA</button>
         </div>
     </nav>
 
-    <div class="p-4 flex-1 w-full max-w-[1900px] mx-auto">
+    <div class="p-3 sm:p-4 flex-1 w-full max-w-[1900px] mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
             
-            <div class="lg:col-span-7 bg-white dark:bg-tv-800 rounded-sm border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 panel-widget flex flex-col h-[750px] transition-colors duration-300">
+            <!-- PANEL KIRI (TABLE): Ketinggian responsif h-[600px] lg:h-[750px] -->
+            <div class="lg:col-span-7 bg-white dark:bg-tv-800 rounded-sm border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 panel-widget flex flex-col h-[600px] lg:h-[750px] transition-colors duration-300">
                 
-                <div class="flex space-x-6 px-4 pt-3 border-b border-gray-200 dark:border-tv-700 bg-gray-50 dark:bg-tv-800 overflow-x-auto text-[11px] uppercase tracking-wider shrink-0">
+                <!-- TABS: overflow-x-auto ditambah padding -->
+                <div class="flex space-x-4 sm:space-x-6 px-3 sm:px-4 pt-3 border-b border-gray-200 dark:border-tv-700 bg-gray-50 dark:bg-tv-800 overflow-x-auto text-[10px] sm:text-[11px] uppercase tracking-wider shrink-0 scrollbar-hide">
                     <button onclick="bukaTab('tabSemua')" id="btnTab-tabSemua" class="tab-btn pb-3 tab-active whitespace-nowrap">MARKETS</button>
                     <button onclick="bukaTab('tabGainers')" id="btnTab-tabGainers" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP GAINERS</button>
                     <button onclick="bukaTab('tabActive')" id="btnTab-tabActive" class="tab-btn pb-3 tab-inactive whitespace-nowrap">TOP ACTIVE</button>
@@ -84,8 +87,8 @@
                     <button onclick="bukaTab('tabScanner')" id="btnTab-tabScanner" class="tab-btn pb-3 tab-inactive whitespace-nowrap text-accent-500">SCANNER</button>
                 </div>
 
-                <div id="panelScanner" class="hidden p-4 bg-gray-100 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 shrink-0">
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 items-end text-xs font-mono">
+                <div id="panelScanner" class="hidden p-3 sm:p-4 bg-gray-100 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 shrink-0">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-xs font-mono">
                         <div>
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM PRICE (RM)</label>
                             <input type="number" id="scanMinP" value="0.10" step="0.05" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
@@ -109,36 +112,38 @@
                                 <option value="AVOID">AVOID</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="col-span-2 md:col-span-1">
                             <button onclick="renderJadual()" class="w-full bg-accent-500 hover:bg-accent-400 text-white font-sans font-bold tracking-widest py-1.5 rounded-sm transition">SCAN</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="px-4 py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-100 dark:bg-tv-900/80 gap-4 shrink-0">
+                <!-- CARIAN: Responsive padding dan width -->
+                <div class="px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-tv-700 flex flex-wrap justify-between items-center bg-gray-100 dark:bg-tv-900/80 gap-3 shrink-0">
                     <span class="text-[11px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap" id="tajukJadual">MARKETS</span>
                     
-                    <div class="flex-1 max-w-sm relative">
+                    <div class="flex-1 w-full min-w-[150px] max-w-sm relative">
                         <svg class="w-3.5 h-3.5 search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         <input type="text" id="carianKaunter" onkeyup="renderJadual()" placeholder="Search Ticker / Name..." class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm pl-8 pr-3 py-1 outline-none text-xs text-slate-800 dark:text-gray-200 focus:border-accent-500 font-mono transition shadow-sm">
                     </div>
 
-                    <span class="text-[11px] text-gray-500 dark:text-gray-400 font-mono bg-gray-200 dark:bg-tv-700 px-2 py-0.5 rounded-sm whitespace-nowrap" id="kiraanKaunter">0 MATCHES</span>
+                    <span class="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 font-mono bg-gray-200 dark:bg-tv-700 px-2 py-0.5 rounded-sm whitespace-nowrap" id="kiraanKaunter">0 MATCHES</span>
                 </div>
 
-                <div id="panelTable" class="flex-1 overflow-y-auto bg-white dark:bg-tv-800">
-                    <table class="w-full text-left relative">
+                <!-- TABLE WRAPPER: Tambah overflow-x-auto supaya responsif di mobile -->
+                <div id="panelTable" class="flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-tv-800 w-full">
+                    <table class="w-full text-left relative min-w-[800px]"> <!-- Tambah min-w supaya jadual maintain struktur -->
                         <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
                             <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest select-none">
                                 <th class="px-3 py-2 w-10 text-center">★</th>
                                 <th class="px-3 py-2 sortable whitespace-nowrap" onclick="setSort('symbol')">TICKER ↕️</th>
-                                <th class="px-3 py-2">NAME</th>
-                                <th class="px-3 py-2">SECTOR</th>
+                                <th class="px-3 py-2 whitespace-nowrap">NAME</th>
+                                <th class="px-3 py-2 whitespace-nowrap">SECTOR</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('price')">PRICE ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('change')">CHANGE ↕️</th>
                                 <th class="px-3 py-2 text-right sortable whitespace-nowrap" onclick="setSort('volume')">VOLUME ↕️</th>
                                 <th class="px-3 py-2 text-center sortable whitespace-nowrap" onclick="setSort('signal')">SIGNAL ↕️</th>
-                                <th class="px-3 py-2 text-center">FUNDAMENTAL</th>
+                                <th class="px-3 py-2 text-center whitespace-nowrap">FUNDAMENTAL</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
@@ -147,14 +152,15 @@
                     </table>
                 </div>
 
-                <div id="panelIndices" class="hidden flex-1 overflow-y-auto bg-white dark:bg-tv-800">
-                    <table class="w-full text-left">
+                <!-- INDICES WRAPPER: Tambah overflow-x-auto -->
+                <div id="panelIndices" class="hidden flex-1 overflow-x-auto overflow-y-auto bg-white dark:bg-tv-800 w-full">
+                    <table class="w-full text-left min-w-[400px]">
                         <thead class="sticky top-0 bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 z-10 font-bold text-[11px] font-sans shadow-sm">
                             <tr class="text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                                 <th class="px-3 py-2">INDEX</th>
                                 <th class="px-3 py-2 text-right">VALUE</th>
-                                <th class="px-3 py-2 text-right">CHANGE</th>
-                                <th class="px-3 py-2 text-right">CHANGE (%)</th>
+                                <th class="px-3 py-2 text-right whitespace-nowrap">CHANGE</th>
+                                <th class="px-3 py-2 text-right whitespace-nowrap">CHANGE (%)</th>
                             </tr>
                         </thead>
                         <tbody id="indicesBody" class="divide-y divide-gray-200 dark:divide-tv-700 font-mono text-gray-800 dark:text-gray-300">
@@ -164,74 +170,74 @@
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: CHART -->
-            <div class="lg:col-span-5 bg-white dark:bg-tv-800 border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 rounded-sm panel-widget flex flex-col h-[750px] overflow-hidden">
+            <!-- RIGHT PANEL: CHART - Ketinggian responsif h-[500px] lg:h-[750px] -->
+            <div class="lg:col-span-5 bg-white dark:bg-tv-800 border-t-2 border-t-accent-500 border border-gray-300 dark:border-tv-700 rounded-sm panel-widget flex flex-col h-[500px] lg:h-[750px] overflow-hidden">
                 
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 flex-wrap gap-2 shrink-0">
-                    <div class="flex items-start gap-4">
+                <div class="px-3 sm:px-4 py-3 border-b border-gray-200 dark:border-tv-700 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 dark:bg-tv-900 flex-wrap gap-3 shrink-0">
+                    <div class="flex flex-col gap-2 w-full sm:w-auto">
                         <div class="flex flex-col">
-                            <h3 class="text-xs font-bold text-gray-800 dark:text-gray-200 tracking-widest uppercase">TECHNICAL CHART</h3>
-                            <span id="chartSubtitle" class="text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[300px] block">WAITING DATA...</span>
+                            <h3 class="text-[10px] sm:text-xs font-bold text-gray-800 dark:text-gray-200 tracking-widest uppercase">TECHNICAL CHART</h3>
+                            <span id="chartSubtitle" class="text-base sm:text-lg font-bold text-accent-500 font-sans mt-0.5 whitespace-nowrap truncate max-w-[250px] sm:max-w-[300px] block">WAITING DATA...</span>
                         </div>
                         
-                        <div class="flex bg-white dark:bg-tv-800 rounded-sm text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono mt-1">
-                            <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
-                            <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
-                            <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
+                        <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono mt-1">
+                            <button onclick="tukarTimeframe('1D')" id="tf-1D" class="px-2 sm:px-3 py-1 bg-gray-200 dark:bg-tv-600 text-accent-500 dark:text-white">1 DAY</button>
+                            <button onclick="tukarTimeframe('1W')" id="tf-1W" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 WEEK</button>
+                            <button onclick="tukarTimeframe('1M')" id="tf-1M" class="px-2 sm:px-3 py-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-tv-700">1 MONTH</button>
                         </div>
                     </div>
 
-                    <div class="flex gap-2 font-mono mt-1">
-                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">Trading View</button>
-                        <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[11px] px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm">KLSE Screener</button>
+                    <div class="flex gap-2 font-mono mt-1 w-full sm:w-auto justify-end">
+                        <button onclick="bukaTradingViewAdvanced()" class="text-white bg-accent-500 hover:bg-accent-400 text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">Trading View</button>
+                        <button onclick="bukaKLSEScreener()" class="text-white bg-[#00838f] hover:bg-[#006064] text-[10px] sm:text-[11px] px-2 sm:px-3 py-1.5 rounded-sm font-bold uppercase tracking-wider transition shadow-sm whitespace-nowrap">KLSE Screener</button>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 px-4 py-2 flex items-center justify-between gap-4 shrink-0">
-                    <div class="flex items-center gap-4 flex-wrap">
-                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-accent-500 select-none">
+                <div class="bg-gray-50 dark:bg-tv-900 border-b border-gray-200 dark:border-tv-700 px-3 sm:px-4 py-2 flex items-center justify-between gap-4 shrink-0 overflow-x-auto scrollbar-hide">
+                    <div class="flex items-center gap-3 sm:gap-4 flex-nowrap min-w-max">
+                        <label class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-500 cursor-pointer hover:text-accent-500 select-none whitespace-nowrap">
                             <input type="checkbox" id="toggleEMA" onchange="toggleIndicators()" class="accent-accent-500 w-3 h-3"> EMA 50
                         </label>
-                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-gray-800 dark:hover:text-white select-none">
+                        <label class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-500 cursor-pointer hover:text-gray-800 dark:hover:text-white select-none whitespace-nowrap">
                             <input type="checkbox" id="toggleTurtle" onchange="toggleIndicators()" class="accent-gray-800 w-3 h-3"> 20 DAY CHANNEL
                         </label>
-                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-mbuy select-none">
+                        <label class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-500 cursor-pointer hover:text-mbuy select-none whitespace-nowrap">
                             <input type="checkbox" id="toggleIchi" onchange="toggleIndicators()" class="accent-mbuy w-3 h-3"> ICHIMOKU
                         </label>
-                        <label class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 cursor-pointer hover:text-blue-400 select-none border-l pl-3 border-gray-300 dark:border-tv-600">
+                        <label class="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-gray-500 cursor-pointer hover:text-blue-400 select-none border-l pl-3 border-gray-300 dark:border-tv-600 whitespace-nowrap">
                             <input type="checkbox" id="toggleBB" onchange="toggleIndicators()" class="accent-blue-400 w-3 h-3"> BOLLINGER BANDS
                         </label>
                     </div>
                 </div>
 
-                <div id="chartError" class="text-center text-msell p-4 hidden text-xs uppercase tracking-widest font-mono"></div>
+                <div id="chartError" class="text-center text-msell p-4 hidden text-[10px] sm:text-xs uppercase tracking-widest font-mono"></div>
                 <div id="tvChartContainer" class="flex-1 w-full relative overflow-hidden"></div>
             </div>
 
         </div>
     </div>
 
-    <!-- MODAL FA -->
+    <!-- MODAL FA: Tambah max-h-[90vh] supaya responsif di skrin kecil -->
     <div id="faModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-tv-800 w-full max-w-lg rounded-sm shadow-2xl overflow-hidden border border-gray-300 dark:border-tv-600 modal-content">
-            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900">
-                <h3 class="font-bold text-sm uppercase tracking-widest text-slate-800 dark:text-white">
+        <div class="bg-white dark:bg-tv-800 w-full max-w-lg rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content flex flex-col max-h-[90vh]">
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0">
+                <h3 class="font-bold text-xs sm:text-sm uppercase tracking-widest text-slate-800 dark:text-white">
                     FUNDAMENTAL : <span id="faSymbol" class="text-accent-500"></span>
                 </h3>
                 <button onclick="tutupFA()" class="text-gray-400 hover:text-msell text-xl font-mono leading-none cursor-pointer transition">✕</button>
             </div>
-            <div class="p-6 text-sm font-mono">
+            <div class="p-4 sm:p-6 text-sm font-mono overflow-y-auto">
                 <div class="flex justify-between items-center bg-gray-100 dark:bg-tv-900 px-4 py-3 border border-gray-200 dark:border-tv-700 mb-5 rounded-sm">
                     <div>
-                        <span class="text-gray-500 dark:text-gray-400 block text-xs uppercase tracking-widest font-sans font-bold">SECTOR</span>
+                        <span class="text-gray-500 dark:text-gray-400 block text-[10px] sm:text-xs uppercase tracking-widest font-sans font-bold">SECTOR</span>
                         <span id="faSector" class="font-bold text-slate-800 dark:text-white">-</span>
                     </div>
                     <div class="text-right">
-                        <span class="text-gray-500 dark:text-gray-400 block text-xs uppercase tracking-widest font-sans font-bold">MARKET CAP</span>
-                        <span id="faCap" class="font-bold text-base text-accent-500">-</span>
+                        <span class="text-gray-500 dark:text-gray-400 block text-[10px] sm:text-xs uppercase tracking-widest font-sans font-bold">MARKET CAP</span>
+                        <span id="faCap" class="font-bold text-sm sm:text-base text-accent-500">-</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
                     <div class="py-2 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center">
                         <span class="text-gray-500 dark:text-gray-400 font-sans font-semibold tracking-wider">P/E RATIO</span><span id="faPE" class="font-bold">-</span>
                     </div>
@@ -264,14 +270,14 @@
         </div>
     </div>
 
-    <!-- MODAL SIGNAL -->
+    <!-- MODAL SIGNAL: Tambah overflow supaya boleh scroll dalam popup -->
     <div id="signalModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-tv-800 w-full max-w-md rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content">
-            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900">
-                <h3 class="font-bold text-sm uppercase tracking-widest text-slate-800 dark:text-white">SIGNAL LOGIC</h3>
+        <div class="bg-white dark:bg-tv-800 w-full max-w-md rounded-sm shadow-2xl border border-gray-300 dark:border-tv-600 modal-content flex flex-col max-h-[90vh]">
+            <div class="px-5 py-4 border-b border-gray-200 dark:border-tv-700 flex justify-between items-center bg-gray-50 dark:bg-tv-900 shrink-0">
+                <h3 class="font-bold text-xs sm:text-sm uppercase tracking-widest text-slate-800 dark:text-white">SIGNAL LOGIC</h3>
                 <button onclick="tutupSignal()" class="text-gray-400 hover:text-msell text-xl font-mono leading-none cursor-pointer transition">✕</button>
             </div>
-            <div class="p-6 text-sm text-gray-700 dark:text-gray-300 space-y-4 leading-relaxed font-sans" id="signalContent"></div>
+            <div class="p-4 sm:p-6 text-[11px] sm:text-sm text-gray-700 dark:text-gray-300 space-y-4 leading-relaxed font-sans overflow-y-auto" id="signalContent"></div>
         </div>
     </div>
 
