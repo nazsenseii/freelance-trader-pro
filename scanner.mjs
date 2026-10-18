@@ -31,11 +31,8 @@ async function jalankanScannerMomentum() {
 
     // Tapis dan Asingkan Induk & Waran Syarikat
     masterList.forEach(item => {
-        // Buang .KL dan sengkang (-) kalau ada supaya format seragam
         const baseCode = item.symbol.toUpperCase().replace('.KL', '').replace('-', '').trim();
-        
         const isMotherShare = /^[A-Z0-9]{3,4}$/.test(baseCode);
-        // Tangkap waran syarikat: WA, WB, WC dll (Cth: 0138WA, MYEGWA)
         const isCompanyWarrant = /^[A-Z0-9]{3,4}W[A-Z]$/.test(baseCode);
 
         if (isMotherShare) {
@@ -48,7 +45,7 @@ async function jalankanScannerMomentum() {
     const senaraiSaham = [...senaraiInduk, ...senaraiWaran];
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & 2-YEAR CHART)`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (BATCH UPLOAD & INDEX OPTIMIZED)`);
     console.log(`📊 JUMLAH INDUK DIPROSES: ${senaraiInduk.length} Kaunter`);
     console.log(`📊 JUMLAH WARAN DIPROSES: ${senaraiWaran.length} Kaunter`);
     console.log("=====================================================\n");
@@ -67,6 +64,8 @@ async function jalankanScannerMomentum() {
     await supabase.from('hasil_scan').delete().neq('id', 0);
 
     let jumlahBerjaya = 0;
+    let batchData = []; // Tatasusunan untuk kumpul data pukal
+    const BATCH_SIZE = 50; // Muat naik setiap 50 kaunter
     const industriHaram = ['bank', 'insurance', 'credit services', 'casino', 'gambling', 'tobacco', 'brewer', 'alcohol', 'liquor'];
 
     for (let i = 0; i < senaraiSaham.length; i++) {
@@ -76,12 +75,12 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
-            await rehatSeketika(600); // Elak sekatan Yahoo Finance
+            await rehatSeketika(400); // Masa rehat dioptimumkan kepada 400ms
 
             const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
             const senaraiHarga = dataSejarah?.quotes; 
             
-            // JARING KESELAMATAN (SAFETY NET): Minimum 2 hari data sahaja diperlukan
+            // JARING KESELAMATAN (SAFETY NET): Minimum 2 hari data
             if (!senaraiHarga || senaraiHarga.length < 2) {
                 console.log(`    -> ⚠️ SKIP: Data kurang 2 hari (${senaraiHarga ? senaraiHarga.length : 0} rekod). Terlalu baru.`);
                 continue; 
@@ -95,7 +94,6 @@ async function jalankanScannerMomentum() {
                 }
             });
 
-            // Sekat jika 2 hari terakhir langsung tiada volum (kaunter tidak cair/kayu)
             if(dataVolume[dataVolume.length - 1] === 0 && dataVolume[dataVolume.length - 2] === 0) {
                 console.log(`    -> ⚠️ SKIP: Tiada Volume (0 Lot). Kaunter mungkin digantung/kering.`);
                 continue;
@@ -104,7 +102,6 @@ async function jalankanScannerMomentum() {
             const hargaTerkini = dataClose[dataClose.length - 1];
             const volTerkini = dataVolume[dataVolume.length - 1];
 
-            // KIRAAN BERSYARAT (FALLBACK): Tak paksa kira kalau data tak cukup
             const hasilEMA50 = dataClose.length >= 50 ? EMA.calculate({ period: 50, values: dataClose }) : [];
             const ema50 = hasilEMA50.length > 0 ? hasilEMA50[hasilEMA50.length - 1] : null;
 
@@ -114,7 +111,6 @@ async function jalankanScannerMomentum() {
             const hasilSMA200 = dataClose.length >= 200 ? SMA.calculate({ period: 200, values: dataClose }) : [];
             const sma200 = hasilSMA200.length > 0 ? hasilSMA200[hasilSMA200.length - 1] : null;
 
-            // --- PERUBAHAN: BOLLINGER BANDS (20, 1) FRED TAM ---
             const hasilBB = dataClose.length >= 20 ? BollingerBands.calculate({ period: 20, stdDev: 1, values: dataClose }) : [];
             const bb = hasilBB.length > 0 ? hasilBB[hasilBB.length - 1] : { upper: null, lower: null };
 
@@ -125,16 +121,13 @@ async function jalankanScannerMomentum() {
             const last20Vol = dataVolume.slice(-jumlahHariVol);
             const vol20MA = last20Vol.reduce((a, b) => a + b, 0) / jumlahHariVol;
 
-            // PENGESANAN IPO DAN WARAN
             const baseCodeStr = simbol.toUpperCase().replace('.KL', '').replace('-', '').trim();
             const isWarrant = /^[A-Z0-9]{3,4}W[A-Z]$/.test(baseCodeStr);
             const isIPO = (ema50 === null);
 
-            // STATUS SIGNAL IPO / WARAN BARU
             let statusSignal = "NEUTRAL ⚖️";
             
             if (isIPO) {
-                // Labelkan sebagai NEW untuk IPO dan Waran Baru
                 statusSignal = "NEW 🆕";
             } else {
                 if (hargaTerkini < ema50) {
@@ -145,7 +138,7 @@ async function jalankanScannerMomentum() {
                     const isVolBreakout = volTerkini > (vol20MA * 1.5); 
 
                     if (isBBBreakout && isTurtleBreakout && isVolBreakout) {
-                        statusSignal = "STRONG BUY 🚀";
+                        statusSignal = "BUY 🚀";
                     } 
                     else if (ema20 !== null && ema20 > ema50 && ((high20 - hargaTerkini) / hargaTerkini < 0.05) && volTerkini < vol20MA) {
                         statusSignal = "MONITOR CLOSELY 🔭";
@@ -214,18 +207,16 @@ async function jalankanScannerMomentum() {
                 }
             } catch(e) {}
 
-            // --- PERUBAHAN: PENGIRAAN RATING 10/10 ---
+            // PENGIRAAN RATING 10/10
             let faScore = 0;
             let taScore = 0;
 
             if (!isWarrant && !isIPO) {
-                // Markah Fundamental (Max 4)
                 if (eps !== null && eps > 0) faScore++;
                 if (faExtras.roe !== null && faExtras.roe > 0.1) faScore++;
                 if (faExtras.net_income !== null && faExtras.net_income > 0) faScore++;
-                if (div_yield !== null && div_yield > 0) faScore++; // Bayar dividen
+                if (div_yield !== null && div_yield > 0) faScore++;
 
-                // Markah Teknikal (Max 6)
                 if (ema50 !== null && hargaTerkini > ema50) taScore++;
                 if (sma200 !== null && hargaTerkini > sma200) taScore++;
                 if (ema20 !== null && ema50 !== null && ema20 > ema50) taScore++;
@@ -236,7 +227,6 @@ async function jalankanScannerMomentum() {
 
             let total_rating = (isWarrant || isIPO) ? null : (faScore + taScore);
 
-            // --- PERUBAHAN: TAMBAH DATA KE DALAM JSON ---
             const fa_data_json = {
                 shortName: namaSyarikat, pe_ratio: pe_ratio, market_cap: market_cap, eps: eps, shares_out: shares_out,
                 book_value: book_value, div_yield: div_yield, ema_20: ema20, ema_50: ema50,
@@ -244,18 +234,24 @@ async function jalankanScannerMomentum() {
                 is_warrant: isWarrant, is_ipo: isIPO, total_rating: total_rating, fa_score: faScore, ta_score: taScore
             };
 
-            const { error } = await supabase.from('hasil_scan').insert([{
+            // KUMPUL DATA DALAM BATCH
+            batchData.push({
                 symbol: simbol, name: namaSyarikat, price: hargaTerkini,
                 signal: statusSignal, chart_data: dataCartaWeb, sector: sektorSyarikat,
                 change: changeRM, change_pct: changePct, volume: volTerkini, fa_data: fa_data_json
-            }]);
+            });
 
-            if (error) {
-                console.log(`    -> ⚠️ Gagal simpan DB: ${error.message}`);
-            } else {
-                let badge = statusSignal.includes('AVOID') ? '🔴' : (statusSignal.includes('NEW') ? '🆕' : '🟢');
-                console.log(`    -> ${badge} LULUS | Sector: ${sektorSyarikat} | Signal: ${statusSignal} | Rating: ${total_rating !== null ? total_rating+'/10' : 'N/A'}`);
-                jumlahBerjaya++;
+            jumlahBerjaya++;
+
+            // APABILA CUKUP BATCH_SIZE ATAU HARI TERAKHIR -> UPLOAD PUKAL
+            if (batchData.length >= BATCH_SIZE || i === senaraiSaham.length - 1) {
+                const { error } = await supabase.from('hasil_scan').upsert(batchData, { onConflict: 'symbol' });
+                if (error) {
+                    console.log(`    -> ⚠️ Gagal simpan Batch Supabase: ${error.message}`);
+                } else {
+                    console.log(`    -> 📦 [BATCH UPLOAD] ${batchData.length} kaunter berjaya disimpan ke Supabase.`);
+                }
+                batchData = []; // KOSONGKAN BATCH
             }
 
         } catch (error) {
