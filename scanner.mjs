@@ -26,17 +26,31 @@ async function jalankanScannerMomentum() {
 
     const masterList = JSON.parse(fs.readFileSync('senarai_bursa.json', 'utf8'));
     
-    // Tapis hanya Induk & Waran Syarikat sahaja
-    const senaraiSaham = masterList.filter(item => {
-        const baseCode = item.symbol.replace('.KL', '');
-        const isMotherShare = /^[A-Z0-9]{3,4}$/i.test(baseCode);
-        const isCompanyWarrant = /^[A-Z0-9]{3,4}W[A-Z]?$/i.test(baseCode);
-        return isMotherShare || isCompanyWarrant;
+    const senaraiInduk = [];
+    const senaraiWaran = [];
+
+    // Tapis dan Asingkan Induk & Waran Syarikat
+    masterList.forEach(item => {
+        // Buang .KL dan sengkang (-) kalau ada supaya format seragam
+        const baseCode = item.symbol.toUpperCase().replace('.KL', '').replace('-', '').trim();
+        
+        const isMotherShare = /^[A-Z0-9]{3,4}$/.test(baseCode);
+        // Tangkap waran syarikat: WA, WB, WC dll (Cth: 0138WA, MYEGWA)
+        const isCompanyWarrant = /^[A-Z0-9]{3,4}W[A-Z]$/.test(baseCode);
+
+        if (isMotherShare) {
+            senaraiInduk.push(item);
+        } else if (isCompanyWarrant) {
+            senaraiWaran.push(item);
+        }
     });
 
+    const senaraiSaham = [...senaraiInduk, ...senaraiWaran];
+
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & 2-YEAR CHART ENABLED)`);
-    console.log(`📊 JUMLAH SAHAM DIPROSES: ${senaraiSaham.length} Kaunter`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & 2-YEAR CHART)`);
+    console.log(`📊 JUMLAH INDUK DIPROSES: ${senaraiInduk.length} Kaunter`);
+    console.log(`📊 JUMLAH WARAN DIPROSES: ${senaraiWaran.length} Kaunter`);
     console.log("=====================================================\n");
 
     const tarikhHariNi = new Date();
@@ -62,13 +76,14 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
-            // Rehat 600ms untuk mengelakkan sekatan IP oleh Yahoo Finance
-            await rehatSeketika(600);
+            await rehatSeketika(600); // Elak sekatan Yahoo Finance
 
             const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
             const senaraiHarga = dataSejarah?.quotes; 
             
-            if (!senaraiHarga || senaraiHarga.length < 50) {
+            // JARING KESELAMATAN (SAFETY NET): Minimum 2 hari data sahaja diperlukan
+            if (!senaraiHarga || senaraiHarga.length < 2) {
+                console.log(`    -> ⚠️ SKIP: Data kurang 2 hari (${senaraiHarga ? senaraiHarga.length : 0} rekod). Terlalu baru.`);
                 continue; 
             }
 
@@ -80,52 +95,61 @@ async function jalankanScannerMomentum() {
                 }
             });
 
+            // Sekat jika 2 hari terakhir langsung tiada volum (kaunter tidak cair/kayu)
             if(dataVolume[dataVolume.length - 1] === 0 && dataVolume[dataVolume.length - 2] === 0) {
-                console.log(`    -> ⚠️ DIKETEPIKAN (Tiada Volume/Digantung)`);
+                console.log(`    -> ⚠️ SKIP: Tiada Volume (0 Lot). Kaunter mungkin digantung/kering.`);
                 continue;
             }
 
             const hargaTerkini = dataClose[dataClose.length - 1];
             const volTerkini = dataVolume[dataVolume.length - 1];
 
-            const hasilEMA50 = EMA.calculate({ period: 50, values: dataClose });
-            const ema50 = hasilEMA50[hasilEMA50.length - 1];
+            // KIRAAN BERSYARAT (FALLBACK): Tak paksa kira kalau data tak cukup
+            const hasilEMA50 = dataClose.length >= 50 ? EMA.calculate({ period: 50, values: dataClose }) : [];
+            const ema50 = hasilEMA50.length > 0 ? hasilEMA50[hasilEMA50.length - 1] : null;
 
-            const hasilEMA20 = EMA.calculate({ period: 20, values: dataClose });
-            const ema20 = hasilEMA20[hasilEMA20.length - 1];
+            const hasilEMA20 = dataClose.length >= 20 ? EMA.calculate({ period: 20, values: dataClose }) : [];
+            const ema20 = hasilEMA20.length > 0 ? hasilEMA20[hasilEMA20.length - 1] : null;
 
-            const hasilSMA200 = SMA.calculate({ period: 200, values: dataClose });
-            const sma200 = hasilSMA200.length > 0 ? hasilSMA200[hasilSMA200.length - 1] : 0;
+            const hasilSMA200 = dataClose.length >= 200 ? SMA.calculate({ period: 200, values: dataClose }) : [];
+            const sma200 = hasilSMA200.length > 0 ? hasilSMA200[hasilSMA200.length - 1] : null;
 
-            const hasilBB = BollingerBands.calculate({ period: 10, stdDev: 1, values: dataClose });
-            const bb = hasilBB.length > 0 ? hasilBB[hasilBB.length - 1] : { upper: 0, lower: 0 };
+            const hasilBB = dataClose.length >= 10 ? BollingerBands.calculate({ period: 10, stdDev: 1, values: dataClose }) : [];
+            const bb = hasilBB.length > 0 ? hasilBB[hasilBB.length - 1] : { upper: null, lower: null };
 
-            const last20High = dataHigh.slice(-20);
+            const jumlahHariVol = Math.min(20, dataVolume.length);
+            const last20High = dataHigh.slice(-jumlahHariVol);
             const high20 = Math.max(...last20High);
             
-            const last20Vol = dataVolume.slice(-20);
-            const vol20MA = last20Vol.reduce((a, b) => a + b, 0) / 20;
+            const last20Vol = dataVolume.slice(-jumlahHariVol);
+            const vol20MA = last20Vol.reduce((a, b) => a + b, 0) / jumlahHariVol;
 
+            // STATUS SIGNAL IPO / WARAN BARU
             let statusSignal = "NEUTRAL ⚖️";
-            if (hargaTerkini < ema50) {
-                statusSignal = "AVOID 🚫";
+            
+            if (ema50 === null) {
+                // Labelkan sebagai NEW untuk IPO dan Waran Baru
+                statusSignal = "NEW 🆕";
             } else {
-                const isBBBreakout = hargaTerkini > bb.upper;
-                const isTurtleBreakout = hargaTerkini >= high20 || ((high20 - hargaTerkini) / hargaTerkini < 0.01); 
-                const isVolBreakout = volTerkini > (vol20MA * 1.5); 
+                if (hargaTerkini < ema50) {
+                    statusSignal = "AVOID 🚫";
+                } else {
+                    const isBBBreakout = bb.upper !== null && hargaTerkini > bb.upper;
+                    const isTurtleBreakout = hargaTerkini >= high20 || ((high20 - hargaTerkini) / hargaTerkini < 0.01); 
+                    const isVolBreakout = volTerkini > (vol20MA * 1.5); 
 
-                if (isBBBreakout && isTurtleBreakout && isVolBreakout) {
-                    statusSignal = "STRONG BUY 🚀";
-                } 
-                else if (ema20 > ema50 && ((high20 - hargaTerkini) / hargaTerkini < 0.05) && volTerkini < vol20MA) {
-                    statusSignal = "MONITOR CLOSELY 🔭";
-                } 
-                else if (hargaTerkini > ema50 && (Math.abs(hargaTerkini - ema20)/ema20 < 0.03 || Math.abs(hargaTerkini - ema50)/ema50 < 0.03) && volTerkini < vol20MA) {
-                    statusSignal = "PULLBACK 📉";
+                    if (isBBBreakout && isTurtleBreakout && isVolBreakout) {
+                        statusSignal = "STRONG BUY 🚀";
+                    } 
+                    else if (ema20 !== null && ema20 > ema50 && ((high20 - hargaTerkini) / hargaTerkini < 0.05) && volTerkini < vol20MA) {
+                        statusSignal = "MONITOR CLOSELY 🔭";
+                    } 
+                    else if (hargaTerkini > ema50 && ((ema20 !== null && Math.abs(hargaTerkini - ema20)/ema20 < 0.03) || Math.abs(hargaTerkini - ema50)/ema50 < 0.03) && volTerkini < vol20MA) {
+                        statusSignal = "PULLBACK 📉";
+                    }
                 }
             }
 
-            // Ambil data 2 tahun (sepenuhnya) untuk dipaparkan di web dashboard
             const senarai2Tahun = senaraiHarga; 
             let dataCartaWeb = [];
             for (let hari of senarai2Tahun) {
@@ -142,13 +166,11 @@ async function jalankanScannerMomentum() {
             let sektorSyarikat = 'N/A';
             let faExtras = { float_shares: null, pb_ratio: null, total_debt: null, net_income: null, roe: null };
 
-            // Penentuan awal perubahan harga
             if(dataClose.length > 1) {
                 changeRM = hargaTerkini - dataClose[dataClose.length - 2];
                 changePct = (changeRM / dataClose[dataClose.length - 2]) * 100;
             }
 
-            // === MENARIK DATA FA & SEKTOR DARIPADA YAHOO FINANCE ===
             try {
                 const quoteData = await yahooFinance.quote(simbol);
                 if (quoteData) {
@@ -163,20 +185,14 @@ async function jalankanScannerMomentum() {
                     book_value = quoteData.bookValue || null;
                     div_yield = quoteData.dividendYield || null;
                 }
-            } catch(e) {
-                // Abaikan jika quote gagal, gunakan data lalai
-            }
+            } catch(e) {}
 
             try {
-                const profile = await yahooFinance.quoteSummary(simbol, { 
-                    modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] 
-                });
-
+                const profile = await yahooFinance.quoteSummary(simbol, { modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] });
                 if (profile) {
                     sektorSyarikat = profile.assetProfile?.sector || 'N/A';
                     let industri = profile.assetProfile?.industry || '';
                     
-                    // Semakan Penapis Syariah
                     let textCheck = (sektorSyarikat + " " + industri).toLowerCase();
                     let isHaram = industriHaram.some(keyword => textCheck.includes(keyword));
                     if (isHaram) {
@@ -190,34 +206,30 @@ async function jalankanScannerMomentum() {
                     faExtras.net_income = profile.financialData?.netIncomeToCommon || null;
                     faExtras.roe = profile.financialData?.returnOnEquity || null;
                 }
-            } catch(e) {
-                // Abaikan jika profile gagal
-            }
+            } catch(e) {}
 
             const fa_data_json = {
-                shortName: namaSyarikat,
-                pe_ratio: pe_ratio, market_cap: market_cap, eps: eps, shares_out: shares_out,
+                shortName: namaSyarikat, pe_ratio: pe_ratio, market_cap: market_cap, eps: eps, shares_out: shares_out,
                 book_value: book_value, div_yield: div_yield, ema_20: ema20, ema_50: ema50,
-                sma_200: sma200, bb_upper: bb.upper, high_20: high20, vol_20ma: vol20MA, ...faExtras 
+                sma_200: sma200, bb_upper: bb ? bb.upper : null, high_20: high20, vol_20ma: vol20MA, ...faExtras 
             };
 
             const { error } = await supabase.from('hasil_scan').insert([{
                 symbol: simbol, name: namaSyarikat, price: hargaTerkini,
                 signal: statusSignal, chart_data: dataCartaWeb, sector: sektorSyarikat,
-                change: changeRM, change_pct: changePct, volume: volTerkini,
-                fa_data: fa_data_json
+                change: changeRM, change_pct: changePct, volume: volTerkini, fa_data: fa_data_json
             }]);
 
             if (error) {
-                console.log(`    -> ⚠️ Gagal simpan: ${error.message}`);
+                console.log(`    -> ⚠️ Gagal simpan DB: ${error.message}`);
             } else {
-                let badge = statusSignal.includes('AVOID') ? '🔴' : '🟢';
+                let badge = statusSignal.includes('AVOID') ? '🔴' : (statusSignal.includes('NEW') ? '🆕' : '🟢');
                 console.log(`    -> ${badge} LULUS | Sector: ${sektorSyarikat} | Signal: ${statusSignal}`);
                 jumlahBerjaya++;
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Data: Skip ${simbol}`);
+            console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol}`);
         }
     }
     console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis dan disimpan ke Supabase.`);
