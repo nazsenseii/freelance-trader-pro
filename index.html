@@ -316,7 +316,7 @@
         
         let currentSymbol = ''; let currentSortCol = 'signal'; let isAscending = false;
         let chartResizeObserver = null; 
-        let currentView = '6M'; // DEFAULT VIEW SET TO 6 MONTH
+        let currentView = '6M'; 
 
         function tukarTema() {
             const toggle = document.getElementById('themeToggle');
@@ -403,10 +403,16 @@
                 const { data: wlData, error: wlError } = await db.from('watchlist').select('symbol');
                 if (wlData) watchlist = wlData.map(d => d.symbol);
 
-                const { data, error } = await db.from('hasil_scan').select('*').order('price', { ascending: false });
+                // UBAH: Lazy Loading Aktif. Kita hanya tarik teks dan nombor, JANGAN tarik chart_data di sini.
+                const { data, error } = await db.from('hasil_scan')
+                    .select('symbol, name, price, signal, sector, change, change_pct, volume, fa_data, created_at')
+                    .order('price', { ascending: false });
+                
                 if (error) throw error;
                 if (!data || data.length === 0) { if(tbody) tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-mwarn font-sans">NO DATA. RUN SCANNER.</td></tr>`; return; }
-                globalData = data; data.forEach(item => { if(item.chart_data) bankDataCarta[item.symbol] = item.chart_data; });
+                
+                globalData = data; 
+                
                 const elHeader = document.getElementById('lastUpdatedHeader');
                 if (data[0] && data[0].created_at && elHeader) { elHeader.innerText = `UPDATED: ${new Date(data[0].created_at).toLocaleString('en-US')}`; }
                 
@@ -706,11 +712,10 @@
             applyViewToChart();
         }
 
-        // FUNGSI ZOOM DENGAN JARING KESELAMATAN (SAFETY NET)
         function applyViewToChart() {
             if(!chartInstance) return;
             let dataRaw = bankDataCarta[currentSymbol];
-            if (!dataRaw || dataRaw.length === 0) return; // ELAK CRASH JIKA DATA BELUM DRAW
+            if (!dataRaw || dataRaw.length === 0) return;
 
             if(currentView === '2Y') {
                 chartInstance.timeScale().fitContent();
@@ -788,16 +793,21 @@
 
             lineVolAvg = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false, priceScaleId: '', lineStyle: 0 });
 
-            // LAZY LOAD DATA DARI SUPABASE JIKA BELUM ADA
+            // PANGGILAN CARTA LAZY LOAD (Sedut data berat HANYA apabila kaunter diklik)
             if (!bankDataCarta[simbol]) {
                 chartInstance.applyOptions({ watermark: { visible: true, text: 'LOADING CHART...', fontSize: 16, color: 'rgba(0,0,0,0.3)', horzAlign: 'center', vertAlign: 'center' }});
                 try {
                     const { data, error } = await db.from('hasil_scan').select('chart_data').eq('symbol', simbol).single();
-                    if (data && data.chart_data) bankDataCarta[simbol] = data.chart_data;
-                } catch(e) {}
+                    if (data && data.chart_data) {
+                        bankDataCarta[simbol] = data.chart_data;
+                    }
+                } catch(e) {
+                    console.error("Gagal muat turun carta", e);
+                }
                 chartInstance.applyOptions({ watermark: { visible: false }});
             }
 
+            tukarView('6M');
             tukarTimeframe('1D');
         }
 
