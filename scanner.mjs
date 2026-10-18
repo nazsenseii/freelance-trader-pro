@@ -35,7 +35,7 @@ async function jalankanScannerMomentum() {
     });
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & SECTOR ENABLED)`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (FULL FA & 2-YEAR CHART ENABLED)`);
     console.log(`📊 JUMLAH SAHAM DIPROSES: ${senaraiSaham.length} Kaunter`);
     console.log("=====================================================\n");
 
@@ -125,9 +125,10 @@ async function jalankanScannerMomentum() {
                 }
             }
 
-            const senarai6Bulan = senaraiHarga.slice(-130);
+            // Ambil data 2 tahun (sepenuhnya) untuk dipaparkan di web dashboard
+            const senarai2Tahun = senaraiHarga; 
             let dataCartaWeb = [];
-            for (let hari of senarai6Bulan) {
+            for (let hari of senarai2Tahun) {
                 if (hari.close !== null && hari.open !== null) {
                     dataCartaWeb.push({
                         time: hari.date.toISOString().split('T')[0],
