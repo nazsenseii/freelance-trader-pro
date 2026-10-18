@@ -18,6 +18,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey', 'ripHistorical'] });
 const rehatSeketika = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// FUNGSI ANTI-BEKU (TIMEOUT 8 SAAT)
+const batalKalauLama = (promise, ms) => {
+    let idTamatTempoh;
+    const janjiTamatTempoh = new Promise((_, reject) => {
+        idTamatTempoh = setTimeout(() => reject(new Error('TIMEOUT_YAHOO')), ms);
+    });
+    return Promise.race([promise, janjiTamatTempoh]).finally(() => clearTimeout(idTamatTempoh));
+};
+
 async function jalankanScannerMomentum() {
     if (!fs.existsSync('senarai_bursa.json')) {
         console.log("❌ Fail 'senarai_bursa.json' tiada.");
@@ -45,7 +54,7 @@ async function jalankanScannerMomentum() {
     const senaraiSaham = [...senaraiInduk, ...senaraiWaran];
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (BATCH UPLOAD & INDEX OPTIMIZED)`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (TIMEOUT SHIELD & BATCH UPLOAD)`);
     console.log(`📊 JUMLAH INDUK DIPROSES: ${senaraiInduk.length} Kaunter`);
     console.log(`📊 JUMLAH WARAN DIPROSES: ${senaraiWaran.length} Kaunter`);
     console.log("=====================================================\n");
@@ -64,8 +73,8 @@ async function jalankanScannerMomentum() {
     await supabase.from('hasil_scan').delete().neq('id', 0);
 
     let jumlahBerjaya = 0;
-    let batchData = []; // Tatasusunan untuk kumpul data pukal
-    const BATCH_SIZE = 50; // Muat naik setiap 50 kaunter
+    let batchData = []; 
+    const BATCH_SIZE = 50; 
     const industriHaram = ['bank', 'insurance', 'credit services', 'casino', 'gambling', 'tobacco', 'brewer', 'alcohol', 'liquor'];
 
     for (let i = 0; i < senaraiSaham.length; i++) {
@@ -75,12 +84,12 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
-            await rehatSeketika(400); // Masa rehat dioptimumkan kepada 400ms
+            await rehatSeketika(400); 
 
-            const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
+            // PANGGILAN YAHOO DILINDUNGI DENGAN TIMEOUT 8 SAAT
+            const dataSejarah = await batalKalauLama(yahooFinance.chart(simbol, queryOptions), 8000);
             const senaraiHarga = dataSejarah?.quotes; 
             
-            // JARING KESELAMATAN (SAFETY NET): Minimum 2 hari data
             if (!senaraiHarga || senaraiHarga.length < 2) {
                 console.log(`    -> ⚠️ SKIP: Data kurang 2 hari (${senaraiHarga ? senaraiHarga.length : 0} rekod). Terlalu baru.`);
                 continue; 
@@ -171,7 +180,7 @@ async function jalankanScannerMomentum() {
             }
 
             try {
-                const quoteData = await yahooFinance.quote(simbol);
+                const quoteData = await batalKalauLama(yahooFinance.quote(simbol), 8000);
                 if (quoteData) {
                     changeRM = quoteData.regularMarketChange || changeRM;
                     changePct = quoteData.regularMarketChangePercent || changePct;
@@ -187,7 +196,7 @@ async function jalankanScannerMomentum() {
             } catch(e) {}
 
             try {
-                const profile = await yahooFinance.quoteSummary(simbol, { modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] });
+                const profile = await batalKalauLama(yahooFinance.quoteSummary(simbol, { modules: ['assetProfile', 'defaultKeyStatistics', 'financialData'] }), 8000);
                 if (profile) {
                     sektorSyarikat = profile.assetProfile?.sector || 'N/A';
                     let industri = profile.assetProfile?.industry || '';
@@ -207,7 +216,6 @@ async function jalankanScannerMomentum() {
                 }
             } catch(e) {}
 
-            // PENGIRAAN RATING 10/10
             let faScore = 0;
             let taScore = 0;
 
@@ -234,7 +242,6 @@ async function jalankanScannerMomentum() {
                 is_warrant: isWarrant, is_ipo: isIPO, total_rating: total_rating, fa_score: faScore, ta_score: taScore
             };
 
-            // KUMPUL DATA DALAM BATCH
             batchData.push({
                 symbol: simbol, name: namaSyarikat, price: hargaTerkini,
                 signal: statusSignal, chart_data: dataCartaWeb, sector: sektorSyarikat,
@@ -243,7 +250,6 @@ async function jalankanScannerMomentum() {
 
             jumlahBerjaya++;
 
-            // APABILA CUKUP BATCH_SIZE ATAU HARI TERAKHIR -> UPLOAD PUKAL
             if (batchData.length >= BATCH_SIZE || i === senaraiSaham.length - 1) {
                 const { error } = await supabase.from('hasil_scan').upsert(batchData, { onConflict: 'symbol' });
                 if (error) {
@@ -251,11 +257,16 @@ async function jalankanScannerMomentum() {
                 } else {
                     console.log(`    -> 📦 [BATCH UPLOAD] ${batchData.length} kaunter berjaya disimpan ke Supabase.`);
                 }
-                batchData = []; // KOSONGKAN BATCH
+                batchData = []; 
             }
 
         } catch (error) {
-            console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol} | Sebab: ${error.message}`);
+            // PAPARKAN MESEJ ERROR SEBENAR
+            if (error.message === 'TIMEOUT_YAHOO') {
+                console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol} | Sebab: Timeout (Tiada respons dalam 8 saat)`);
+            } else {
+                console.log(`    -> ⚠️ Ralat Panggilan Yahoo: Skip ${simbol} | Sebab: ${error.message}`);
+            }
         }
     }
     console.log(`\n✅ SELESAI! ${jumlahBerjaya} saham dianalisis dan disimpan ke Supabase.`);
