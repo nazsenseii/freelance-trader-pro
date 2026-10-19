@@ -448,7 +448,7 @@
             if (fa.is_ipo) return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm border bg-purple-100 text-purple-600 border-purple-300 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700">IPO 🆕</span>`;
             
             let rate = fa.total_rating || 0;
-            let hue = (rate / 10) * 120; // 0 = Merah, 120 = Hijau
+            let hue = (rate / 10) * 120; 
             let bgLightness = 50 - (rate / 10) * 20; 
             
             return `<span class="px-2 py-0.5 text-[11px] font-bold tracking-widest rounded-sm shadow-sm text-white" style="background-color: hsl(${hue}, 85%, ${bgLightness}%); border: 1px solid hsl(${hue}, 85%, ${bgLightness - 10}%); text-shadow: 0px 1px 2px rgba(0,0,0,0.6);">${rate}/10</span>`;
@@ -552,6 +552,7 @@
             tbody.innerHTML = susunanHTML;
         }
 
+        // FUNGSI RATING BREAKDOWN DIKEMAS KINI (CHECKLIST UI)
         function bukaRatingInfo(simbol) {
             const item = globalData.find(d => d.symbol === simbol); if (!item) return;
             let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {};
@@ -564,27 +565,71 @@
                 let total = fa.total_rating || 0;
                 let faScore = fa.fa_score || 0;
                 let taScore = fa.ta_score || 0;
+
+                let cPrice = parseFloat(item.price) || 0;
+                let cVol = parseFloat(item.volume) || 0;
+
+                // Semakan Kriteria Fundamental (FA)
+                let isEpsOk = (fa.eps !== null && parseFloat(fa.eps) > 0);
+                let isRoeOk = (fa.roe !== null && parseFloat(fa.roe) > 0.1);
+                let isNetIncOk = (fa.net_income !== null && parseFloat(fa.net_income) > 0);
+                let isDivOk = (fa.div_yield !== null && parseFloat(fa.div_yield) > 0);
+
+                // Semakan Kriteria Teknikal (TA)
+                let isPrcEma50 = (fa.ema_50 !== null && cPrice > parseFloat(fa.ema_50));
+                let isPrcSma200 = (fa.sma_200 !== null && cPrice > parseFloat(fa.sma_200));
+                let isEmaCross = (fa.ema_20 !== null && fa.ema_50 !== null && parseFloat(fa.ema_20) > parseFloat(fa.ema_50));
+                let isPrcHigh20 = (fa.high_20 !== null && cPrice >= parseFloat(fa.high_20));
+                let isPrcBB = (fa.bb_upper !== null && cPrice > parseFloat(fa.bb_upper));
+                let isVolSpike = (fa.vol_20ma !== null && cVol > (parseFloat(fa.vol_20ma) * 1.5));
+
+                function getIcon(condition) {
+                    return condition ? '<span class="text-mbuy font-bold">✅ PASS</span>' : '<span class="text-gray-400 dark:text-gray-500 font-bold">❌ FAIL</span>';
+                }
                 
                 content = `
                     <div class="text-center mb-4">
                         <span class="text-4xl font-black ${total >= 7 ? 'text-mbuy' : (total >= 4 ? 'text-mwarn' : 'text-msell')}">${total}/10</span>
                     </div>
-                    <div class="space-y-3 text-xs text-gray-600 dark:text-gray-300">
-                        <div class="flex justify-between border-b pb-2 dark:border-tv-700">
-                            <span class="font-bold">Fundamental (FA)</span>
-                            <span class="font-bold text-slate-800 dark:text-white">${faScore} / 4</span>
+                    <div class="space-y-4 text-xs text-gray-700 dark:text-gray-300 font-sans">
+                        
+                        <!-- FUNDAMENTAL (FA) -->
+                        <div>
+                            <div class="flex justify-between border-b pb-1 dark:border-tv-700 mb-2">
+                                <span class="font-bold text-slate-800 dark:text-white uppercase tracking-wider">Fundamental (FA)</span>
+                                <span class="font-bold text-slate-800 dark:text-white">${faScore}/4</span>
+                            </div>
+                            <ul class="space-y-1.5">
+                                <li class="flex justify-between items-center"><span>EPS > 0 (Profit)</span> ${getIcon(isEpsOk)}</li>
+                                <li class="flex justify-between items-center"><span>ROE > 10%</span> ${getIcon(isRoeOk)}</li>
+                                <li class="flex justify-between items-center"><span>Net Income > 0</span> ${getIcon(isNetIncOk)}</li>
+                                <li class="flex justify-between items-center"><span>Dividend Yield > 0</span> ${getIcon(isDivOk)}</li>
+                            </ul>
                         </div>
-                        <div class="flex justify-between border-b pb-2 dark:border-tv-700">
-                            <span class="font-bold">Technical (TA)</span>
-                            <span class="font-bold text-slate-800 dark:text-white">${taScore} / 6</span>
+
+                        <!-- TECHNICAL (TA) -->
+                        <div>
+                            <div class="flex justify-between border-b pb-1 dark:border-tv-700 mb-2 mt-4">
+                                <span class="font-bold text-slate-800 dark:text-white uppercase tracking-wider">Technical (TA)</span>
+                                <span class="font-bold text-slate-800 dark:text-white">${taScore}/6</span>
+                            </div>
+                            <ul class="space-y-1.5">
+                                <li class="flex justify-between items-center"><span>Price > EMA 50</span> ${getIcon(isPrcEma50)}</li>
+                                <li class="flex justify-between items-center"><span>Price > SMA 200</span> ${getIcon(isPrcSma200)}</li>
+                                <li class="flex justify-between items-center"><span>EMA 20 > EMA 50</span> ${getIcon(isEmaCross)}</li>
+                                <li class="flex justify-between items-center"><span>Breakout 20-Day High</span> ${getIcon(isPrcHigh20)}</li>
+                                <li class="flex justify-between items-center"><span>Breakout Bollinger Band (20,1)</span> ${getIcon(isPrcBB)}</li>
+                                <li class="flex justify-between items-center"><span>Volume > 1.5x (20-Day Avg)</span> ${getIcon(isVolSpike)}</li>
+                            </ul>
                         </div>
-                        <p class="text-[10px] mt-2 italic text-gray-400">Scores are dynamically calculated based on CANSLIM metrics, EMA/SMA alignments, and volume multipliers.</p>
+
                     </div>
                 `;
             }
             document.getElementById('ratingContent').innerHTML = content;
             document.getElementById('ratingModal').classList.add('show');
         }
+
         function tutupRating() { document.getElementById('ratingModal').classList.remove('show'); }
 
         function bukaSignalInfo(simbol) {
