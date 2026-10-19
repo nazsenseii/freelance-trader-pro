@@ -403,7 +403,6 @@
                 const { data: wlData, error: wlError } = await db.from('watchlist').select('symbol');
                 if (wlData) watchlist = wlData.map(d => d.symbol);
 
-                // UBAH: Lazy Loading Aktif. Kita hanya tarik teks dan nombor, JANGAN tarik chart_data di sini.
                 const { data, error } = await db.from('hasil_scan')
                     .select('symbol, name, price, signal, sector, change, change_pct, volume, fa_data, created_at')
                     .order('price', { ascending: false });
@@ -507,6 +506,8 @@
             document.getElementById('kiraanKaunter').innerText = `${dataPaparan.length} MATCHES`;
             if (dataPaparan.length === 0) { tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-gray-500 font-sans">NO MATCHES FOUND.</td></tr>`; return; }
 
+            let susunanHTML = '';
+
             dataPaparan.forEach(item => {
                 const isWl = watchlist.includes(item.symbol); const chgPct = item.change_pct || 0; const chg = item.change || 0;
                 let colorChg = 'text-gray-500 dark:text-gray-400'; let sign = '';
@@ -521,7 +522,7 @@
                     ? "bg-blue-50 dark:bg-tv-700/50 border-b border-gray-200 dark:border-tv-700 cursor-pointer transition-colors" 
                     : "hover:bg-gray-100 dark:hover:bg-tv-800/80 transition-colors border-b border-gray-200 dark:border-tv-700 cursor-pointer";
 
-                tbody.innerHTML += `
+                susunanHTML += `
                     <tr class="${trClass}" onclick="bukaChart('${item.symbol}')">
                         <td class="px-3 py-2 text-center align-middle cursor-pointer hover:bg-gray-200 dark:hover:bg-tv-700 transition" onclick="event.stopPropagation(); toggleWatchlist('${item.symbol}')">${isWl ? svgStarFilled : svgStarOutline}</td>
                         <td class="px-3 py-2 align-middle">
@@ -547,6 +548,8 @@
                     </tr>
                 `;
             });
+
+            tbody.innerHTML = susunanHTML;
         }
 
         function bukaRatingInfo(simbol) {
@@ -793,7 +796,6 @@
 
             lineVolAvg = chartInstance.addLineSeries({ color: '#2962FF', lineWidth: 1, crosshairMarkerVisible: false, priceScaleId: '', lineStyle: 0 });
 
-            // PANGGILAN CARTA LAZY LOAD (Sedut data berat HANYA apabila kaunter diklik)
             if (!bankDataCarta[simbol]) {
                 chartInstance.applyOptions({ watermark: { visible: true, text: 'LOADING CHART...', fontSize: 16, color: 'rgba(0,0,0,0.3)', horzAlign: 'center', vertAlign: 'center' }});
                 try {
