@@ -46,7 +46,7 @@ async function jalankanScannerMomentum() {
     const senaraiSaham = [...senaraiInduk, ...senaraiWaran];
 
     console.log("=====================================================");
-    console.log(`🚀 ENJIN MOMENTUM PRO (KOD ASAL STABIL)`);
+    console.log(`🚀 ENJIN MOMENTUM PRO (AUTO-CLEANUP AKTIF)`);
     console.log(`📊 JUMLAH INDUK DIPROSES: ${senaraiInduk.length} Kaunter`);
     console.log(`📊 JUMLAH WARAN DIPROSES: ${senaraiWaran.length} Kaunter`);
     console.log("=====================================================\n");
@@ -61,6 +61,15 @@ async function jalankanScannerMomentum() {
         interval: '1d' 
     };
 
+    // --- UBAHAN: ARAHAN SAPU BERSIH DATA LAMA (GUNA KOLUM ID) ---
+    console.log("🧹 Memadamkan rekod lama di Supabase...");
+    const { error: delErr } = await supabase.from('hasil_scan').delete().gt('id', 0);
+    if (delErr) {
+        console.error("⚠️ Gagal memadam rekod lama:", delErr.message);
+    } else {
+        console.log("✅ Rekod lama berjaya dipadamkan. Jadual kini kosong.");
+    }
+
     let jumlahBerjaya = 0;
     const industriHaram = ['bank', 'insurance', 'credit services', 'casino', 'gambling', 'tobacco', 'brewer', 'alcohol', 'liquor'];
 
@@ -71,12 +80,11 @@ async function jalankanScannerMomentum() {
         console.log(`[${i+1}/${senaraiSaham.length}] Menganalisis ${simbol}...`);
         
         try {
-            await rehatSeketika(600); // Elak sekatan Yahoo Finance (Masa asal)
+            await rehatSeketika(600);
 
             const dataSejarah = await yahooFinance.chart(simbol, queryOptions);
             const senaraiHarga = dataSejarah?.quotes; 
             
-            // JARING KESELAMATAN: Minimum 2 hari data
             if (!senaraiHarga || senaraiHarga.length < 2) {
                 console.log(`    -> ⚠️ SKIP: Data kurang 2 hari (${senaraiHarga ? senaraiHarga.length : 0} rekod). Terlalu baru.`);
                 continue; 
@@ -90,7 +98,6 @@ async function jalankanScannerMomentum() {
                 }
             });
 
-            // Sekat jika 2 hari terakhir langsung tiada volum
             if(dataVolume[dataVolume.length - 1] === 0 && dataVolume[dataVolume.length - 2] === 0) {
                 console.log(`    -> ⚠️ SKIP: Tiada Volume (0 Lot). Kaunter mungkin digantung/kering.`);
                 continue;
@@ -204,7 +211,6 @@ async function jalankanScannerMomentum() {
                 }
             } catch(e) {}
 
-            // PENGIRAAN RATING 10/10
             let faScore = 0;
             let taScore = 0;
 
@@ -231,7 +237,6 @@ async function jalankanScannerMomentum() {
                 is_warrant: isWarrant, is_ipo: isIPO, total_rating: total_rating, fa_score: faScore, ta_score: taScore
             };
 
-            // SIMPAN TERUS (UPSERT) SETIAP KAUNTER TANPA TUNGGU BATCH 50
             const { error } = await supabase.from('hasil_scan').upsert([{
                 symbol: simbol, name: namaSyarikat, price: hargaTerkini,
                 signal: statusSignal, chart_data: dataCartaWeb, sector: sektorSyarikat,
