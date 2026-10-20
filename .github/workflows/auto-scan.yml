@@ -2,11 +2,13 @@ name: Bursa Auto Scanner
 
 on:
   schedule:
-    - cron: '30 9 * * 1-5'
-  workflow_dispatch:
+    # Berjalan pada pukul 10:00 pagi UTC (6:00 petang Waktu Malaysia)
+    # Setiap hari Isnin hingga Jumaat sahaja (1-5)
+    - cron: '0 10 * * 1-5'
+  workflow_dispatch: # Kekalkan ini untuk benarkan klik manual
 
 jobs:
-  scan-bursa:
+  build:
     runs-on: ubuntu-latest
     
     steps:
