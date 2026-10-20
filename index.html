@@ -88,15 +88,15 @@
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end text-xs font-mono">
                         <div>
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM PRICE (RM)</label>
-                            <input type="number" id="scanMinP" value="0.10" step="0.05" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                            <input type="number" id="scanMinP" value="0.200" step="0.005" oninput="adjustStep(this)" onblur="formatPriceInput(this)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MAXIMUM PRICE (RM)</label>
-                            <input type="number" id="scanMaxP" value="10.00" step="0.10" onblur="this.value = parseFloat(this.value).toFixed(2)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                            <input type="number" id="scanMaxP" value="0.800" step="0.005" oninput="adjustStep(this)" onblur="formatPriceInput(this)" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">MINIMUM VOLUME</label>
-                            <input type="number" id="scanMinVol" value="2000" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
+                            <input type="number" id="scanMinVol" value="10000" class="w-full bg-white dark:bg-tv-800 border border-gray-300 dark:border-tv-600 rounded-sm px-2 py-1.5 outline-none text-slate-800 dark:text-gray-200 focus:border-accent-500">
                         </div>
                         <div>
                             <label class="block text-gray-500 dark:text-gray-400 mb-1 uppercase text-[10px] tracking-wider font-sans font-bold">SIGNAL FILTER</label>
@@ -180,7 +180,6 @@
                     </div>
                     
                     <div class="flex flex-wrap gap-4 items-center w-full">
-                        <!-- BUTTONS: TIME FRAME -->
                         <div class="flex flex-col">
                             <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">TIME FRAME</span>
                             <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono">
@@ -190,7 +189,6 @@
                             </div>
                         </div>
 
-                        <!-- BUTTONS: VIEW (ZOOM) -->
                         <div class="flex flex-col">
                             <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">VIEW (ZOOM)</span>
                             <div class="flex self-start bg-white dark:bg-tv-800 rounded-sm text-[10px] sm:text-[11px] font-bold border border-gray-300 dark:border-tv-600 overflow-hidden font-mono">
@@ -368,6 +366,20 @@
             if (Math.abs(val) >= 1e9) return (val / 1e9).toFixed(2) + 'B'; if (Math.abs(val) >= 1e6) return (val / 1e6).toFixed(2) + 'M'; return val.toLocaleString();
         }
         function formatBillion(num) { return (!num || isNaN(num)) ? '-' : (parseFloat(num)/1e9).toFixed(2) + 'B'; }
+
+        // FUNGSI UNTUK DINAMIKKAN TICK SIZE KOTAK HARGA
+        function adjustStep(el) {
+            let val = parseFloat(el.value);
+            if(isNaN(val)) return;
+            el.step = val >= 1.000 ? "0.010" : "0.005";
+        }
+
+        function formatPriceInput(el) {
+            let val = parseFloat(el.value);
+            if(isNaN(val)) val = 0;
+            el.value = val.toFixed(3);
+            el.step = val >= 1.000 ? "0.010" : "0.005";
+        }
 
         async function tarikSemuaIndeks() {
             const indBody = document.getElementById('indicesBody'); if(!indBody) return;
@@ -552,7 +564,6 @@
             tbody.innerHTML = susunanHTML;
         }
 
-        // FUNGSI RATING BREAKDOWN DIKEMAS KINI (CHECKLIST UI)
         function bukaRatingInfo(simbol) {
             const item = globalData.find(d => d.symbol === simbol); if (!item) return;
             let fa = typeof item.fa_data === 'string' ? JSON.parse(item.fa_data) : item.fa_data || {};
@@ -569,13 +580,11 @@
                 let cPrice = parseFloat(item.price) || 0;
                 let cVol = parseFloat(item.volume) || 0;
 
-                // Semakan Kriteria Fundamental (FA)
                 let isEpsOk = (fa.eps !== null && parseFloat(fa.eps) > 0);
                 let isRoeOk = (fa.roe !== null && parseFloat(fa.roe) > 0.1);
                 let isNetIncOk = (fa.net_income !== null && parseFloat(fa.net_income) > 0);
                 let isDivOk = (fa.div_yield !== null && parseFloat(fa.div_yield) > 0);
 
-                // Semakan Kriteria Teknikal (TA)
                 let isPrcEma50 = (fa.ema_50 !== null && cPrice > parseFloat(fa.ema_50));
                 let isPrcSma200 = (fa.sma_200 !== null && cPrice > parseFloat(fa.sma_200));
                 let isEmaCross = (fa.ema_20 !== null && fa.ema_50 !== null && parseFloat(fa.ema_20) > parseFloat(fa.ema_50));
